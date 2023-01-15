@@ -56,3 +56,57 @@ import cv2 as cv
 #
 #     if cv.waitKey(1) & 0xFF == ord('q'):
 #         break
+
+
+
+# # закрашивание, линие , круги , тексты
+# img = np.zeros((512,512,3), np.uint8)
+#
+#
+# cv.line(img,(0, img.shape[0] // 2),(img.shape[1], img.shape[0] // 2),(255,0,0),2)
+#
+# cv.circle(img, (img.shape[1] // 2, img.shape[0] // 2), 30,(255,0,0), 2)
+#
+# cv.putText(img,'OpenCV',(10,500), cv.FONT_HERSHEY_TRIPLEX, 1, (255,0,0), 2, cv.LINE_AA)
+#
+# cv.imshow('imag', img)
+# cv.waitKey(0)
+
+
+# img = cv.imread('images/ciber.png')
+# img = cv.resize(img, (500, 500))
+
+# # img = cv.flip(img, 1)
+# # функция поворота и увел/уменьше.
+# def rotate(img_param, angle):
+#     height, width = img.shape[:2]
+#     point = (width // 2, height // 2)
+#
+#     mat = cv.getRotationMatrix2D(point, angle, 2)
+#     return cv.warpAffine(img, mat, (width, height))
+#
+# # img = rotate(img, 360)
+# # функция отступов по x, y
+# def transform(img_param, x, y):
+#     mat = np.float32([[1, 0, x], [0, 1, y]])
+#     return cv.warpAffine(img_param, mat, (img_param.shape[1], img_param.shape[0]))
+#
+# img = transform(img, 20, 20)
+
+# # находим новые контуры картинки
+# new_img = np.zeros(img.shape, 'uint8')
+#
+# img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+# img = cv.GaussianBlur(img, (5, 5), 0)
+#
+# img = cv.Canny(img, 20, 50)
+#
+# con, hir = cv.findContours(img, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
+#
+# cv.drawContours(new_img, con, -1, (230, 111, 140), 1)
+#
+# cv.imshow('photo', new_img)
+# cv.waitKey(0)
+
+
+
