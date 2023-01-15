@@ -2,8 +2,6 @@ import sys
 import numpy as np
 import cv2 as cv
 
-
-
 #  # открыть картинку
 # img = cv.imread('images/ciber.png')
 #  # # указываем размеры картинки в кортеже
@@ -107,6 +105,34 @@ import cv2 as cv
 #
 # cv.imshow('photo', new_img)
 # cv.waitKey(0)
-
-
+# # меняем цветовую гамму
+# img = cv.imread('images/ciber.png')
+# img = cv.resize(img, (500, 500))
+#
+# img = cv.cvtColor(img, cv.COLOR_BGR2LAB)
+#
+# img = cv.cvtColor(img, cv.COLOR_LAB2BGR)
+#
+# img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+#
+# r, g, b = cv.split(img)
+#
+# img = cv.merge([g, r, b])
+#
+# cv.imshow('res', img)
+# cv.waitKey(0)
+# # наложение дрог на друга и создание масок
+# photo = cv.imread('images/ciber.png')
+# img = np.zeros(photo.shape[:2], 'uint8')
+#
+# circle = cv.circle(img.copy(), (500, 270), 250, 255, -1)
+# square = cv.rectangle(img.copy(), (25, 25), (250, 350), 255, -1)
+#
+# img = cv.bitwise_and(photo, photo, mask=circle)
+# # img = cv.bitwise_or(circle, square)
+# # img = cv.bitwise_xor(circle, square)
+# # img = cv.bitwise_not(square)
+#
+# cv.imshow('res', img)
+# cv.waitKey(0)
 
