@@ -17,3 +17,7 @@ render/p5.mp4
 voice/__pycache__/
 voice/batch*.log
 voice/batch*.err
+render/OPERACIYA_final.mp4
+render/cues.json
+voice/b?.err
+voice/gemini_synth.*
