@@ -1,0 +1,202 @@
+<!doctype html><html><head><meta charset="utf-8"><title>p0 · Титры и перекличка</title>
+<link rel="stylesheet" href="../lib/style.css">
+<script src="../lib/gsap.min.js"></script><script src="../lib/voicedata.js"></script>
+<script src="../lib/engine.js"></script><script src="../lib/chars.js"></script><script src="../lib/sound.js"></script>
+<script src="../lib/hud.js"></script><script src="../lib/sets.js"></script></head>
+<body><div id="root"></div><script>
+// ЧАСТЬ 0 — хук трейлера + логотип + перекличка.
+// Приёмы: №53 · Спетые слоги бьют по одному на удар (хук) → №132 · Столб света вырывается… облаком дыма (раскрытие логотипа)
+// → №14 · Девять мультяшных героев громоздятся… (перекличка, сборка отряда) → №191 · Камера отъезжает сквозь растущее облако (финальный отъезд).
+const SLOT = [2700, 4200, 5700, 7200, 8700];
+const LINE = [8040, 8370, 8700, 9030, 9360];
+const R1 = E.vdur("r1"), R2 = E.vdur("r2"), R3 = E.vdur("r3"), R4 = E.vdur("r4"), R5 = E.vdur("r5");
+const VV = (id) => E.vdur(id), H1 = 1.0, H2 = H1 + VV("n1a") + 0.3, H3 = H2 + VV("n1b") + 0.3;
+const TB = H3 + VV("n1c") + 0.45;
+const N2A = TB + 0.45, N2B = N2A + VV("n2a") + 0.25, N2W = N2B + VV("n2b") * 0.42, N2E = N2B + VV("n2b");
+const TW = Math.max(TB + 4.8, N2E + 2.0);
+const TS = [TW + 0.85]; [R1, R2, R3, R4].forEach((d, i) => TS.push(TS[i] + d + 0.95));
+const T_END_RC = TS[4] + R5 + 0.9, DUR = T_END_RC + 3.6;
+const tl = E.init({ duration: DUR, partStart: 0 });
+E.ov.lb = 0; E.ov.black = 1;
+
+// ── слои ──
+const sky = E.layer("sky", 0);
+sky.style.cssText += "width:1920px;height:1080px;background:linear-gradient(180deg,#B9772E 0%,#E7A955 28%,#F5D9A0 52%,#E8A04A 70%,#6B4220 100%)";
+const sunL = E.layer("sun", 0.04, { w: 2400 });
+SET.sun(sunL, 1260, 520, 520, "rgba(255,244,214,0.95)"); SET.sun(sunL, 1260, 520, 1100, "rgba(255,206,130,0.55)");
+const far = E.layer("far", 0.15, { w: 3600, blur: 3 });
+let farSvg = SET.hills(3600, 760, 90, 1.3, "#B07A44") + SET.hills(3600, 820, 70, 4.1, "#8E5E33");
+[420, 980, 1700, 2380, 3100].forEach((x, i) => farSvg += SET.pylon(x, 800, 330 - i * 20, "#6E4826", 5));
+farSvg += SET.wires(420, 980, 500, 60, "#6E4826") + SET.wires(980, 1700, 515, 70, "#6E4826") + SET.wires(1700, 2380, 530, 60, "#6E4826") + SET.wires(2380, 3100, 545, 60, "#6E4826");
+SET.svg(far, 3600, 1080, farSvg);
+const smokeFar = E.fxLayer("smokeFar", 0.18);
+[[300, 760, 1.2], [880, 780, 0.8], [1560, 770, 1.5], [2200, 760, 1], [2900, 770, 1.3]].forEach(([x, y, s], i) => E.fx("smokeFar", 0, "smokeColumn", { x, y, size: s, seed: i * 5, color: "92,64,40", speed: 0.05 }));
+const heliL = E.layer("heli", 0.22, { w: 4200, blur: 1.5 });
+const helis = [[520, 300, 0.55], [1350, 210, 0.38], [2300, 330, 0.5], [3300, 260, 0.42]].map(([x, y, s]) => SET.svg(heliL, 700, 300, `<g transform="translate(350,150) scale(${s})">${SET.heli("#3A2616")}</g>`, { x: x - 350, y: y - 150 }));
+const ridge = E.layer("ridge", 0.45, { w: 6400, blur: 1.2 });
+SET.svg(ridge, 6400, 1080, SET.hills(6400, 860, 70, 7.7, "#4A2E18") + SET.hills(6400, 900, 40, 2.2, "#3A2412"));
+const silL = E.layer("sil", 0.45, { w: 4400 }); silL.style.filter = "brightness(0.08) sepia(1)";
+const fxBack = E.fxLayer("fxBack", 0.45);
+const ground = E.layer("ground", 1, { w: 10400 });
+SET.svg(ground, 10400, 1080, SET.hills(10400, 985, 26, 9.1, "#2B1C10", { step: 80 }) + Array.from({ length: 56 }, (_, i) => `<ellipse cx="${i * 190 + E.hash(i) * 90}" cy="${1000 + E.hash(i + 4) * 50}" rx="${30 + E.hash(i + 7) * 40}" ry="10" fill="#1E140B"/>`).join(""));
+const mid = E.layer("mid", 1, { w: 10400 });
+const fx = E.fxLayer("fx", 1);
+const embers = E.fxLayer("embers", 1.15);
+E.fx("embers", 0, "motes", { n: 70, w: 1920 * 4, h: 1080, color: "255,190,110", a: 0.7, size: 3, fall: -40, wind: 30 });
+const near = E.layer("near", 1.45, { w: 14000, blur: 9 });
+let nearSvg = "";
+for (let i = 0; i < 25; i++) nearSvg += `<path d="M${i * 560 + 100},1080 q60,-${170 + E.hash(i) * 120} 140,-${60 + E.hash(i + 3) * 60} q80,30 150,90 z" fill="#140C06"/>`;
+for (let i = 0; i < 14; i++) nearSvg += `<g stroke="#140C06" stroke-width="6" fill="none">${Array.from({ length: 8 }, (_, k) => `<circle cx="${i * 1000 + 700 + k * 36}" cy="${1010 - Math.sin(k) * 8}" r="44"/>`).join("")}</g>`;
+SET.svg(near, 14000, 1080, nearSvg);
+
+// ── силуэт отряда на гребне (дальний план) ──
+const silType = ["schmidt", "graves", "bublik", "lucky", "gluh"];
+const sils = silType.map((t, i) => { const c = C.make(t, silL, { x: 760 + i * 120, y: 880, sc: 0.33, seed: 20 + i }); if (t === "graves") { c.give("R", "sniper"); c.st.armRu = 35; c.st.armRl = 60; } return c; });
+
+// ── герои переклички ──
+const sch = C.make("schmidt", mid, { x: SLOT[0], y: 1000, sc: 1.42, seed: 1 });
+const gra = C.make("graves", mid, { x: SLOT[1], y: 1000, sc: 1.42, seed: 2 });
+const bub = C.make("bublik", mid, { x: SLOT[2], y: 1000, sc: 1.36, seed: 3 });
+const luc = C.make("lucky", mid, { x: SLOT[3], y: -400, sc: 1.42, seed: 4 });
+const glu = C.make("gluh", mid, { x: SLOT[4], y: 1000, sc: 1.42, seed: 5 });
+// крупный Шмидт для логотипа (как солдат на обложке WARDOGS справа)
+const schBig = C.make("schmidt", mid, { x: 1590, y: 1500, sc: 2.2, seed: 11 });
+schBig.give("R", "radio"); Object.assign(schBig.st, { armRu: 32, armRl: 128, propR: -8, turn: -0.45, px: -0.7, twitch: 0.6, brow: -0.3, smile: -0.2, op: 0 });
+schBig.wrap.style.filter = "drop-shadow(-14px 0 0 rgba(255,214,140,0.35))";
+sch.give("R", "radio"); Object.assign(sch.st, { armRu: 10, armRl: 20, turn: 0.2, smile: -0.1, twitch: 0.5 });
+gra.give("R", "sniper"); Object.assign(gra.st, { armRu: 14, armRl: 40, propR: 60, lid: 0.45, smile: 0 });
+bub.give("R", "can"); Object.assign(bub.st, { armRu: 20, armRl: 30, eyeWide: 0.8, smile: 0.5 });
+Object.assign(luc.st, { smile: 1, rot: -20 });
+glu.give("R", "detonator"); Object.assign(glu.st, { armRu: 25, armRl: 95, propR: 0, smile: 1 });
+
+// ── камера: старт крупно на гребне ──
+E.camSet({ cx: 980, cy: 620, s: 1.28, r: -1.2 });
+tl.to(E.ov, { black: 0, duration: 1.4, ease: "power2.out" }, 0.1);
+E.camTo(0.1, { cx: 960, cy: 560, s: 1.12, r: 0 }, TB - 0.25, "power1.inOut");
+
+// хук: три удара слов
+E.say(null, "n1a", H1); E.say(null, "n1b", H2); E.say(null, "n1c", H3);
+H.slam("ПЯТЬ БОЙЦОВ", H1 - 0.02, VV("n1a") - 0.1, { size: 210, y: 470 });
+H.slam("ОДНА МИССИЯ", H2 - 0.02, VV("n1b") - 0.1, { size: 210, y: 470 });
+H.slam("НОЛЬ ШАНСОВ", H3 - 0.02, VV("n1c") - 0.2, { size: 230, y: 470, color: "#E9B949" });
+[H1 - 0.02, H2 - 0.02, H3 - 0.02].forEach((t, i) => { E.sfx(t, "taiko", { gain: 0.8 }); E.sfx(t, "hit", { gain: 0.22 }); E.shake(t, 5, 0.25); });
+// силуэты отряда делают шаг вперёд на каждом ударе
+sils.forEach((c, i) => C.pose(c, [H1, H2, H3][i % 3], { bob: -6 }, 0.3));
+E.music(0.2, TB - 0.15, "drone", { vol: 1 });
+E.sfx(0.3, "wind", { dur: 9, gain: 0.07 });
+E.sfx(H3, "riser", { dur: TB - H3, gain: 0.16 });
+
+// ── взрыв и логотип (композиция обложки) ──
+tl.to(silL, { opacity: 0, duration: 0.5, ease: "power2.in" }, TB + 0.1);
+E.fx("fxBack", TB, "explosion", { x: 1250, y: 840, size: 2.6, seed: 3 });
+tl.to(E.ov, { flash: 0.85, duration: 0.06, ease: "power1.out" }, TB); tl.to(E.ov, { flash: 0, duration: 0.9, ease: "power2.out" }, TB + 0.08);
+E.shake(TB, 18, 0.8); E.sfx(TB, "boom", { size: 1.4 }); E.sfx(TB, "braam", { dur: 4.2, note: 55, gain: 0.34 });
+E.camTo(TB, { cx: 960, cy: 540, s: 1.0, r: 0.6 }, 4.6, "power2.out");
+tl.to(schBig.st, { op: 1, duration: 0.01 }, TB);
+schBig.st.y = 1620; tl.to(schBig.st, { y: 1560, duration: 4.6, ease: "power2.out" }, TB);
+tl.to(schBig.st, { twitch: 1, duration: 0.3 }, TB + 3);
+E.music(TB, Math.max(TB + 4.8, N2E + 1.6) - TB + 0.6, "trailer", { vol: 0.85 });
+
+const logo = H.el(`<div class="tag y" style="font-size:54px;display:inline-block">ОПЕРАЦИЯ</div>
+ <div class="logo l1" style="font-size:236px;margin-top:22px">ХУЙНЮ</div>
+ <div class="logo l2" style="font-size:150px;margin-top:6px">НЕ ТВОРИТЬ</div>
+ <div class="row" style="display:flex;gap:22px;margin-top:30px;align-items:center"><div class="tag w" style="font-size:50px">ТАКТИЧЕСКИЙ</div><div class="tag y" style="font-size:50px">ПОЛНЫЙ ПРОВАЛ</div></div>
+ <div class="box" style="font-size:60px;display:inline-block;margin-top:70px">МУЛЬТФИЛЬМ · 18+</div>`, { left: "118px", top: "170px" });
+const lk = [...logo.children];
+lk.forEach((n) => gsap.set(n, { opacity: 0 }));
+// тег — на «Операция», слова — ударами на «Хуйню не творить»
+E.say(null, "n2a", N2A); E.say(null, "n2b", N2B);
+const pop = (n, t, from = 1.5) => { gsap.set(n, { scale: from, filter: "blur(14px)", transformOrigin: "0% 60%" });
+  tl.to(n, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.26, ease: "power3.out" }, t); };
+gsap.set(lk[0], { clipPath: "inset(0% 100% 0% 0%)", opacity: 1 }); tl.to(lk[0], { clipPath: "inset(0% 0% 0% 0%)", duration: 0.45, ease: "power3.out" }, N2A - 0.03);
+pop(lk[1], N2B); pop(lk[2], N2W, 1.35);
+gsap.set(lk[3], { clipPath: "inset(0% 100% 0% 0%)", opacity: 1 }); tl.to(lk[3], { clipPath: "inset(0% 0% 0% 0%)", duration: 0.6, ease: "power3.out" }, N2E + 0.1);
+gsap.set(lk[4], { y: 40 }); tl.to(lk[4], { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.6)" }, N2E + 0.5);
+[N2B, N2W].forEach((t) => { E.sfx(t, "taiko", { gain: 0.9 }); E.sfx(t, "hit", { gain: 0.26 }); E.shake(t, 7, 0.25); });
+E.sfx(N2A - 0.03, "whoosh", { dur: 0.4, gain: 0.12 }); E.sfx(N2E + 0.1, "whoosh", { dur: 0.5, gain: 0.12 }); E.sfx(N2E + 0.5, "thud", { gain: 0.3 });
+// блик по логотипу
+const shine = H.el(`<div style="width:180px;height:900px;background:linear-gradient(90deg,transparent,rgba(255,250,230,0.55),transparent);transform:rotate(18deg)"></div>`, { left: "-300px", top: "120px", mixBlendMode: "overlay" });
+tl.to(shine, { x: 1500, duration: 1.1, ease: "power2.inOut" }, N2E + 0.8); tl.to(shine, { opacity: 0, duration: 0.2 }, N2E + 1.8);
+
+// ── уход логотипа и вжух к перекличке ──
+lk.forEach((n, i) => tl.to(n, { x: -120, opacity: 0, filter: "blur(10px)", duration: 0.35, ease: "power2.in" }, TW - 0.05 + i * 0.04));
+tl.to(schBig.st, { x: 1200, duration: 0.7, ease: "power3.in" }, TW);
+tl.to(schBig.st, { op: 0, duration: 0.2 }, TW + 0.5);
+E.camTo(TW, { cx: SLOT[0] - 380, cy: 540, s: 1, r: 0 }, 0.85, "power3.inOut");
+const blurOn = (t, d = 0.85) => { tl.to(E.ov, { blur: 10, duration: d * 0.45, ease: "power2.in" }, t); tl.to(E.ov, { blur: 0, duration: d * 0.55, ease: "power2.out" }, t + d * 0.45); };
+gsap.set(E.ov, { blur: 0 });
+blurOn(TW); E.sfx(TW, "whoosh", { dur: 0.8, gain: 0.25 });
+
+// ── перекличка ──
+E.music(TW + 0.6, T_END_RC - TW + 2.4, "action", { vol: 0.7 });
+const cards = [
+  { cls: "КОМАНДИР", rank: "КАПИТАН", name: "ШМИДТ", stats: [["НЕРВЫ", 0.93], ["ГЛАЗ", "ДЁРГАЕТСЯ"], ["ДО ПЕНСИИ", "3 ДНЯ"]] },
+  { cls: "СНАЙПЕР", rank: "КАПРАЛ", name: "ГРЕЙВС", stats: [["ТОЧНОСТЬ", 1], ["ЭМОЦИИ", 0.03], ["ПРОМАХОВ", "0"]] },
+  { cls: "ПОДРЫВНИК", rank: "РЯДОВОЙ", name: "БУБЛИК", stats: [["КАЛОРИИ", 1], ["ТРОТИЛ", 1], ["ТОРМОЗА", "НЕТ"]] },
+  { cls: "ВЕЗУНЧИК", rank: "РЯДОВОЙ", name: "ЛАКИ", stats: [["ВЕЗЕНИЕ", 1], ["МОЗГ", 0.07], ["ВЫЖИЛ", "ВСЕГДА"]] },
+  { cls: "СВЯЗИСТ", rank: "РЯДОВОЙ", name: "ГЛУХ", stats: [["СЛУХ", 0.0], ["КНОПКИ", "ВСЕ"], ["ПОНЯЛ?", "ДА (НЕТ)"]] },
+];
+const RD = [R1, R2, R3, R4, R5];
+const scrim = H.el("", { left: 0, top: 0, width: "1300px", height: "1080px", background: "linear-gradient(90deg,rgba(14,9,4,0.78) 0%,rgba(14,9,4,0.5) 55%,rgba(14,9,4,0) 100%)", opacity: 0 });
+E.hud.insertBefore(scrim, E.hud.firstChild);
+tl.to(scrim, { opacity: 1, duration: 0.6, ease: "power2.out" }, TS[0] - 0.3); tl.to(scrim, { opacity: 0, duration: 0.5, ease: "power2.in" }, T_END_RC - 0.6);
+TS.forEach((t, k) => {
+  const ch = [sch, gra, bub, luc, glu][k], len = RD[k] + 0.6;
+  if (k > 0) { E.camTo(t - 0.75, { cx: SLOT[k] - 380, cy: 540, s: 1, r: k % 2 ? 0.5 : -0.5 }, 0.8, "power3.inOut"); E.sfx(t - 0.75, "whoosh", { dur: 0.7, gain: 0.18 }); }
+  E.say(null, "r" + (k + 1), t + 0.25);
+  H.card(t + 0.05, len, { ...cards[k], x: 118, y: 200 });
+  E.sfx(t + 0.05, "taiko", { gain: 0.55 });
+  // медленный наезд внутри плана — камера живёт
+  E.camTo(t + 0.06, { cx: SLOT[k] - 360, cy: 530, s: 1.05 }, RD[k] + 0.1, "sine.inOut");
+});
+// Шмидт: поворот к зрителю, рация ко рту, глаз дёргается
+C.pose(sch, TS[0] + 0.2, { turn: 0, px: 0.1, armRu: 30, armRl: 128, propR: -8, twitch: 1, smile: -0.35, brow: -0.4 }, 0.6, "power2.inOut");
+C.pose(sch, TS[0] + 1.8, { lid: 0.35, head: -4 }, 0.6, "power2.inOut");
+// Грейвс: вскидывает винтовку, блик оптики
+C.pose(gra, TS[1] + 0.1, { armRu: 62, armRl: 76, propR: -4, armLu: 46, armLl: 70, lean: -2 }, 0.7, "power3.out");
+E.fx("fx", TS[1] + 0.85, "sparks", { x: SLOT[1] + 260, y: 640, n: 0, a: 0 });
+const glint = E.glow(mid, SLOT[1] + 245, 615, 80, "rgba(255,250,220,1)", 0); tl.to(glint, { opacity: 1, duration: 0.12 }, TS[1] + 0.85); tl.to(glint, { opacity: 0, duration: 0.5 }, TS[1] + 1.0);
+E.sfx(TS[1] + 0.85, "metal", { gain: 0.12 });
+// Бублик: откусывает банку тушёнки
+const BT = TS[2];
+for (let i = 0; i < 3; i++) { C.pose(bub, BT + 0.2 + i * 0.75, { armRu: 40, armRl: 150, propR: 0, mouthOpen: 0.9 }, 0.25, "power2.out"); C.pose(bub, BT + 0.48 + i * 0.75, { armRu: 26, armRl: 70, mouthOpen: 0 }, 0.25, "power2.in"); E.sfx(BT + 0.45 + i * 0.75, "chew", { dur: 0.4 }); }
+C.pose(bub, BT + 2.6, { smile: 1, eyeWide: 1 }, 0.4);
+// Лаки: падает с неба, приземляется со сплющиванием, сзади взрыв — ему хоть бы что
+const LT = TS[3];
+tl.to(luc.st, { y: 1000, rot: 0, duration: 0.55, ease: "power3.in" }, LT - 0.1);
+tl.to(luc.st, { sqy: 0.72, sqx: 1.25, duration: 0.08, ease: "power2.out" }, LT + 0.45);
+tl.to(luc.st, { sqy: 1, sqx: 1, duration: 0.6, ease: "elastic.out(1,0.4)" }, LT + 0.53);
+E.shake(LT + 0.45, 10, 0.3); E.sfx(LT + 0.45, "thud", { gain: 0.7 }); E.sfx(LT - 0.1, "whoosh", { dur: 0.5, gain: 0.2 });
+E.fx("fx", LT + 1.5, "explosion", { x: SLOT[3] + 330, y: 960, size: 0.9, seed: 8 }); E.sfx(LT + 1.5, "boom", { size: 0.7 }); E.shake(LT + 1.5, 9, 0.4);
+C.pose(luc, LT + 1.6, { lean: -4, px: 0.6 }, 0.3); C.pose(luc, LT + 2.2, { lean: 0, px: 0, mouthOpen: 0.3 }, 0.4);
+// Глух: жмёт на детонатор (искры), прикладывает руку к уху
+const GT = TS[4];
+C.pose(glu, GT + 0.4, { armLu: 40, armLl: 120 }, 0.3, "power3.out");
+E.fx("fx", GT + 0.7, "sparks", { x: SLOT[4] + 60, y: 700, n: 26 }); E.sfx(GT + 0.7, "click", { gain: 0.6 }); E.sfx(GT + 0.72, "zap");
+C.pose(glu, GT + 0.75, { armLu: 10, armLl: 15, eyeWide: 0.7 }, 0.35);
+C.pose(glu, GT + 1.7, { armLu: 150, armLl: 150, head: 8, eyeWide: 0, turn: 0.3 }, 0.5, "power2.inOut");
+
+// ── финальный строй: склейка на удар (вспышка) → весь отряд плечом к плечу, медленный отъезд ──
+const TF = T_END_RC;
+tl.to(E.ov, { flash: 0.9, duration: 0.05 }, TF - 0.05); tl.to(E.ov, { flash: 0, duration: 0.7, ease: "power2.out" }, TF + 0.02);
+E.sfx(TF - 0.05, "taiko", { gain: 0.9 }); E.sfx(TF - 0.05, "hit", { gain: 0.3 }); E.shake(TF, 8, 0.3);
+[sch, gra, bub, luc, glu].forEach((c, i) => tl.set(c.st, { x: LINE[i], sc: [1.05, 1.05, 1.0, 1.05, 1.05][i] }, TF));
+tl.set(E.cam, { cx: 8700, cy: 610, s: 0.86, r: 0 }, TF);
+E.camTo(TF + 0.05, { cx: 8700, cy: 640, s: 0.74, r: 0 }, DUR - TF - 0.1, "sine.inOut");
+C.pose(sch, TF, { armRu: 10, armRl: 20, twitch: 1, turn: 0.15 }, 0.5); C.pose(glu, TF, { armLu: 10, armLl: 15, head: 0 }, 0.5);
+const team = H.el(`<div class="tag y" style="font-size:52px;display:inline-block">ОТРЯД УКОМПЛЕКТОВАН</div>`, { left: "50%", top: "120px" });
+gsap.set(team, { xPercent: -50, clipPath: "inset(0% 50% 0% 50%)" });
+tl.to(team, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.6, ease: "power3.out" }, TF + 1.1);
+E.sfx(TF + 1.1, "braam", { dur: 2.4, note: 49, gain: 0.26 }); E.sfx(TF + 1.1, "taiko");
+// шов в ангар: вспышка молнии → темнота
+tl.to(E.ov, { black: 1, duration: 0.9, ease: "power2.in" }, DUR - 1.0);
+tl.to(team, { opacity: 0, duration: 0.5 }, DUR - 1.0);
+E.sfx(DUR - 0.9, "thunder", { gain: 0.45 }); E.sfx(DUR - 1.4, "rain", { dur: 1.4, gain: 0.05 });
+
+// вертолёты и винты
+E.onFrame((t) => { helis.forEach((h, i) => { h.style.transform = `translate(${t * (22 + i * 9)}px,${Math.sin(t * 0.8 + i) * 10}px)`; h.querySelectorAll(".rotor").forEach((r) => r.setAttribute("transform", `scale(${Math.cos(t * 38 + i)},1)`)); }); });
+// глитч-приёмы из разбора трейлера WARDOGS
+E.glitch(TW + 0.25, 0.35, 1); E.glitch(TF - 0.12, 0.25, 0.8);
+H.glitchText(lk[1], N2B, 0.35); H.glitchText(lk[2], N2W, 0.35); H.glitchText(lk[0], TW - 0.05, 0.35);
+E.frame();
+</script></body></html>

@@ -1,0 +1,118 @@
+<!doctype html><html><head><meta charset="utf-8"><title>p5 · Титры и сцена после титров</title>
+<link rel="stylesheet" href="../lib/style.css">
+<script src="../lib/gsap.min.js"></script><script src="../lib/voicedata.js"></script>
+<script src="../lib/engine.js"></script><script src="../lib/chars.js"></script><script src="../lib/sound.js"></script>
+<script src="../lib/hud.js"></script><script src="../lib/sets.js"></script></head>
+<body><div id="root"></div><script>
+// ЧАСТЬ 5 — титры и сцена после титров. Приёмы: №44 · Give Flint a try… (титры по слову, проезд),
+// №51 · Lyria 3 растворяется, в фокус приходит ссылка (переход в пустыню из расфокуса), №98 · Слоган по слову… экран гаснет как ЭЛТ (финал).
+const V = (id) => E.vdur(id);
+const TCR = 0.8, TPOST = 11.6, TLUCK = TPOST + 2.4, T5A = TLUCK + 3.2, TSINK = T5A + V("s5a") + 0.3, T5B = TSINK + 1.6, TEND = T5B + V("s5b") + 0.9, DUR = TEND + 4.2;
+const tl = E.init({ duration: DUR, partStart: 183 });
+E.ov.flash = 1; E.ov.flashColor = "#FFFDF4"; E.ov.lb = 0.55; E.ov.vig = 0.7;
+
+// ── титры на чёрном с пеплом ──
+const crBg = E.layer("crBg", 0); crBg.style.cssText += "width:1920px;height:1080px;background:#0B0906";
+const ashCr = E.fxLayer("ashCr", 0.2); E.fx("ashCr", 0, "motes", { n: 110, color: "190,180,165", a: 0.6, size: 3.5, fall: 60, wind: 20 });
+tl.to(E.ov, { flash: 0, duration: 1.4, ease: "power2.out" }, 0);
+E.sfx(0, "wind", { dur: TPOST + 0.5, gain: 0.06 });
+E.music(0.4, TPOST - 0.6, "ambient", { vol: 0.9 });
+const roll = H.el(`<div style="text-align:center;width:1920px">
+ <div class="tag y" style="font-size:44px;display:inline-block">ОПЕРАЦИЯ</div>
+ <div class="logo" style="font-size:150px;margin-top:16px">ХУЙНЮ НЕ ТВОРИТЬ</div>
+ <div class="tag w" style="font-size:52px;margin:110px 0 40px;color:#E9B949">В РОЛЯХ</div>
+ ${[["КАПИТАН ШМИДТ", "мечтал о пенсии"], ["КАПРАЛ ГРЕЙВС", "не промахнулся ни разу"], ["РЯДОВОЙ БУБЛИК", "съел два сухпайка вместе с банками"], ["РЯДОВОЙ ЛАКИ", "выжил"], ["РЯДОВОЙ ГЛУХ", "так ничего и не услышал"], ["БОСС «ЧЁРНОГО КЛЫКА»", "упал"]]
+   .map(([a, b]) => `<div style="margin:26px 0"><div class="logo" style="font-size:72px">${a}</div><div class="sub" style="font-size:44px;color:#C9B78F;margin-top:10px">${b}</div></div>`).join("")}
+ <div class="tag w" style="font-size:46px;margin-top:110px;color:#E9B949">ПРИ СЪЁМКАХ ПОСТРАДАЛИ ВСЕ</div></div>`, { left: 0, top: "1100px" });
+gsap.set(roll, { y: 0 });
+tl.to(roll, { y: -2750, duration: TPOST - TCR - 0.3, ease: "none" }, TCR); // бегущие титры — линейно (исключение закона)
+tl.to(roll, { opacity: 0, duration: 0.4 }, TPOST - 0.6);
+// плашка «сцена после титров»
+const after = H.el(`<div class="box" style="font-size:64px">СЦЕНА ПОСЛЕ ТИТРОВ</div>`, { left: "50%", top: "470px" });
+gsap.set(after, { xPercent: -50, opacity: 0, scale: 1.2 });
+tl.to(after, { opacity: 1, scale: 1, duration: 0.4, ease: "power3.out" }, TPOST - 0.4);
+tl.to(after, { opacity: 0, scale: 0.94, filter: "blur(10px)", duration: 0.5, ease: "power2.in" }, TPOST + 1.3);
+E.sfx(TPOST - 0.4, "taiko", { gain: 0.5 }); E.sfx(TPOST - 0.4, "hit", { gain: 0.15 });
+
+// ── пустыня, кратер, утро ──
+const dz = [];
+const xl = (name, p, o) => { const d = E.layer(name, p, o); d.style.opacity = 0; dz.push(d); return d; };
+const sky = xl("sky", 0); sky.style.cssText += "width:1920px;height:1080px;background:linear-gradient(180deg,#B8743A 0%,#E2AC66 32%,#F3D9A4 55%,#D79A55 72%,#6A4424 100%)";
+const sunL = xl("sunL", 0.05, { w: 2400 }); SET.sun(sunL, 700, 600, 700, "rgba(255,240,205,0.85)");
+const farL = xl("farL", 0.2, { w: 3000, blur: 3 }); farL.style.left = "-500px";
+let fs = SET.hills(3000, 780, 60, 8.1, "#B78450") + SET.hills(3000, 830, 40, 2.9, "#966334");
+[300, 1400, 2500].forEach((x, i) => fs += `<g transform="rotate(${[-14, 9, -22][i]} ${x} 820)">${SET.pylon(x, 820, 240, "#6E4826", 5)}</g>`);
+SET.svg(farL, 3000, 1080, fs);
+const smoke = E.fxLayer("smoke", 0.3); smoke.el.style.opacity = 0; dz.push(smoke.el);
+E.fx("smoke", 0, "smokeColumn", { x: 1200, y: 800, size: 2.2, seed: 4, color: "90,64,44", speed: 0.035, h: 900, wind: 300 });
+const ground = xl("ground", 1, { w: 3400 }); ground.style.left = "-700px";
+SET.svg(ground, 3400, 1080, `<rect y="900" width="3400" height="400" fill="#9C6A3A"/>` + SET.hills(3400, 915, 20, 4.4, "#A9763F", { step: 60 }) +
+  `<ellipse cx="1660" cy="985" rx="520" ry="70" fill="#3A2412"/><ellipse cx="1660" cy="985" rx="440" ry="48" fill="#1E120A"/><path d="M1140,975 q520,-60 1040,0" stroke="#C48A4E" stroke-width="18" fill="none"/>`);
+const mid = E.layer("mid", 1, { w: 3400 }); mid.style.opacity = 0; dz.push(mid);
+const luc = C.make("lucky", mid, { x: 960, y: 1300, sc: 1.05, seed: 4 });
+Object.assign(luc.st, { soot: 1, smile: 0.8, turn: 0, mouthOpen: 0.15, talkGain: 0.6 });
+luc.wrap.style.filter = "brightness(0.42) sepia(0.4)";
+const lucEyes = E.glow(mid, 0, 0, 1, "#fff", 0);
+const flash = SET.svg(mid, 80, 60, `<rect x="10" y="20" width="44" height="22" rx="5" fill="#E9B949" stroke="#1B130B" stroke-width="5"/><rect x="52" y="24" width="18" height="14" fill="#BFBFBF" stroke="#1B130B" stroke-width="4"/>`);
+const front = E.layer("front", 1, { w: 3400 }); front.style.opacity = 0; dz.push(front); front.style.left = "-700px";
+SET.svg(front, 3400, 1080, `<path d="M1100,1080 Q1160,960 1660,1000 Q2160,960 2220,1080z" fill="#8E5E32"/>`);
+const cap = SET.svg(mid, 240, 160, `<g transform="translate(120,110)"><path d="M-95,-10 Q-105,-90 0,-88 Q105,-90 95,-10z" fill="#5F5B35" stroke="#1B130B" stroke-width="6"/><rect x="-98" y="-24" width="196" height="26" rx="8" fill="#2B2016" stroke="#1B130B" stroke-width="6"/>
+  <circle cx="0" cy="-58" r="14" fill="#E9B949" stroke="#1B130B" stroke-width="4"/><path d="M-90,6 Q0,30 90,6 L80,0 Q0,18 -80,0z" fill="#1B130B"/></g>`, { x: 1250, y: 860 });
+const sandL = E.layer("sand", 1, { w: 3400 }); sandL.style.opacity = 0; dz.push(sandL);
+SET.svg(sandL, 3400, 1080, `<path d="M1180,1000 q30,-26 70,-20 q50,-10 90,-4 q60,-6 110,10 q30,10 30,40 h-300z" fill="#A9763F"/>`);
+const fx = E.fxLayer("fx", 1); fx.el.style.opacity = 0; dz.push(fx.el);
+E.fx("fx", 0, "motes", { n: 90, color: "120,100,85", a: 0.6, size: 4, fall: 45, wind: 25 });
+
+tl.set(dz, { opacity: 1 }, TPOST + 1.2);
+tl.set([crBg, ashCr.el], { opacity: 0 }, TPOST + 1.2);
+gsap.set(E.ov, { blur: 0 });
+tl.set(E.ov, { blur: 18 }, TPOST + 1.2);
+tl.to(E.ov, { blur: 0, duration: 1.2, ease: "power2.out" }, TPOST + 1.25);
+E.camSet({ cx: 960, cy: 560, s: 1.0 });
+tl.set(E.cam, { cx: 1100, cy: 520, s: 0.92 }, TPOST + 1.2);
+E.camTo(TPOST + 1.22, { cx: 1000, cy: 600, s: 1.05 }, TLUCK - TPOST - 1.3, "sine.inOut");
+E.sfx(TPOST + 1.2, "wind", { dur: DUR - TPOST - 1.2, gain: 0.09 });
+// Лаки вылезает из ямы
+luc.st.x = 960;
+tl.to(luc.st, { y: 985, duration: 1.4, ease: "power2.out" }, TLUCK);
+C.hop(luc, TLUCK + 1.4, 30);
+E.sfx(TLUCK, "sand", { dur: 1.6 }); E.sfx(TLUCK + 1.7, "thud", { gain: 0.25 });
+E.camTo(TLUCK + 0.05, { cx: 980, cy: 560, s: 1.35 }, 1.7, "power2.inOut");
+// оглядывается
+C.pose(luc, TLUCK + 1.9, { turn: -0.6, px: -1 }, 0.4, "power2.inOut");
+C.pose(luc, TLUCK + 2.5, { turn: 0.6, px: 1 }, 0.4, "power2.inOut");
+C.pose(luc, TLUCK + 3.0, { turn: -0.5, px: -1, eyeWide: 0.8, smile: 1 }, 0.3, "power2.out");
+E.camTo(TLUCK + 2.9, { cx: 1120, cy: 610, s: 1.12 }, 0.9, "power2.inOut");
+// машет фуражке
+for (let i = 0; i < 4; i++) { C.pose(luc, T5A + i * 0.42, { armLu: 160, armLl: 30 }, 0.21, "power2.out"); C.pose(luc, T5A + 0.21 + i * 0.42, { armLu: 140, armLl: 75 }, 0.21, "power2.in"); }
+C.pose(luc, T5A + 1.8, { armLu: 10, armLl: 14 }, 0.4);
+E.say(luc, "s5a", T5A);
+// фуражка медленно тонет в песке
+tl.to(cap, { y: 960, duration: 2.6, ease: "power1.in" }, TSINK);
+E.sfx(TSINK, "sand", { dur: 2.6 });
+E.camTo(TSINK - 0.1, { cx: 1320, cy: 860, s: 1.8 }, 1.25, "power2.inOut");
+C.pose(luc, TSINK + 0.6, { eyeWide: 0, smile: 0.2, brow: 0.6 }, 0.6);
+// Грейвс по рации
+E.say(null, "s5b", T5B); H.radio(T5B, "s5b", "ГРЕЙВС");
+E.camTo(T5B - 0.4, { cx: 1080, cy: 600, s: 1.25 }, V("s5b") + 0.4, "sine.inOut");
+C.pose(luc, T5B + 2.6, { turn: 0.3, px: 0.6, eyeWide: 0.8, smile: -0.3 }, 0.4);
+// флешка в зубах — держится у рта
+E.onFrame(() => { const s = luc.st, k = s.sc; flash.style.transform = `translate(${s.x + s.turn * 24 * k - 40}px,${s.y - s.jump - 320 * k - 30}px)`; flash.style.opacity = s.op; });
+
+// ── конец: логотип и выключение как ЭЛТ ──
+tl.to(E.ov, { black: 1, duration: 0.8, ease: "power2.in" }, TEND);
+const endL = H.el(`<div style="text-align:center;width:1920px"><div class="tag y" style="font-size:46px;display:inline-block">ОПЕРАЦИЯ</div>
+ <div class="logo" style="font-size:150px;margin-top:20px">ХУЙНЮ НЕ ТВОРИТЬ</div><div class="box" style="font-size:54px;display:inline-block;margin-top:50px">КОНЕЦ</div></div>`, { left: 0, top: "300px", zIndex: 9 });
+endL.style.zIndex = 9; E.root.appendChild(endL);
+gsap.set(endL, { opacity: 0, scale: 1.08 });
+tl.to(endL, { opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" }, TEND + 0.7);
+E.sfx(TEND + 0.7, "braam", { dur: 3, note: 55, gain: 0.3 }); E.sfx(TEND + 0.7, "taiko");
+E.music(TEND + 0.7, 2.6, "sting", { vol: 0.7 });
+// ЭЛТ: сплющивание в линию → точка → чёрный
+tl.to(endL, { scaleY: 0.02, scaleX: 1.15, filter: "brightness(3)", duration: 0.18, ease: "power3.in" }, DUR - 1.0);
+tl.to(endL, { scaleX: 0.01, duration: 0.2, ease: "power3.in" }, DUR - 0.82);
+tl.to(endL, { opacity: 0, duration: 0.2 }, DUR - 0.6);
+E.sfx(DUR - 1.0, "zap", { dur: 0.35 });
+E.glitch(TPOST + 1.1, 0.35, 0.9); H.glitchText(endL, TEND + 0.7, 0.45);
+E.frame();
+</script></body></html>

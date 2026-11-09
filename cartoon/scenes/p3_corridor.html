@@ -1,0 +1,201 @@
+<!doctype html><html><head><meta charset="utf-8"><title>p3 · Бойня в коридоре</title>
+<link rel="stylesheet" href="../lib/style.css">
+<script src="../lib/gsap.min.js"></script><script src="../lib/voicedata.js"></script>
+<script src="../lib/engine.js"></script><script src="../lib/chars.js"></script><script src="../lib/sound.js"></script>
+<script src="../lib/hud.js"></script><script src="../lib/sets.js"></script></head>
+<body><div id="root"></div><script>
+// ЧАСТЬ 3 — белый коридор. Приёмы: №125 · Синяя плиссированная штора вылетает… (двери лифта раскрывают сцену),
+// №110 · Вспышка звезды… жёсткие склейки в ритм (семь выстрелов из темноты), №21 · перевод фокуса/глубина (плач Шмидта),
+// №187 · …взрывается визуализатором (раскрутка Гатлинга → пена), №105 · частицы дрейфуют (пена накрывает объектив).
+const V = (id) => E.vdur(id);
+const TDOOR = 1.2, TWAVE = 3.0, TTHROW = 4.4, T3A = 5.6, TBURST = T3A + V("s3a") + 0.25, TSHOT = TBURST + 1.9;
+const T3B = TSHOT + 7 * 0.27 + 0.4, TSIT = T3B + V("s3b") + 0.1, T3C = TSIT + 0.5, TBOSS = T3C + V("s3c") + 0.45, T3D = TBOSS + 0.45;
+const TEYES = T3D + V("s3d") - 0.6, TLUCKY = T3D + V("s3d") + 0.9, TFOAM = TLUCKY + 1.0, T3E = TFOAM + 1.8, DUR = T3E + V("s3e") + 2.2;
+const tl = E.init({ duration: DUR, partStart: 108 });
+E.ov.black = 1; E.ov.lb = 0.55; E.ov.vig = 0.45; E.ov.grade = 0.55;
+
+// ── коридор ──
+const back = E.layer("back", 0.9, { w: 3200 });
+let w = `<rect width="3200" height="1080" fill="#E7E3D8"/><rect y="0" width="3200" height="120" fill="#C9C4B6"/>`;
+for (let x = 0; x < 3200; x += 160) w += `<rect x="${x}" y="120" width="158" height="780" fill="none" stroke="#D3CEC1" stroke-width="3"/>`;
+w += `<rect y="600" width="3200" height="26" fill="#B7302A"/><rect y="626" width="3200" height="8" fill="#1B130B" opacity="0.2"/>`;
+for (let x = 200; x < 3200; x += 520) w += `<rect x="${x}" y="40" width="300" height="34" rx="8" fill="#FFFDF2" stroke="#9A9484" stroke-width="4"/>`;
+w += `<g><rect x="250" y="420" width="340" height="490" fill="#9A968A" stroke="#1B130B" stroke-width="8"/><rect x="380" y="370" width="80" height="34" rx="6" fill="#1B130B"/><circle cx="420" cy="387" r="9" fill="#E9B949"/></g>
+ <rect x="268" y="436" width="304" height="470" fill="#120D08"/>
+ <g><rect x="2290" y="400" width="250" height="500" fill="#7A776C" stroke="#1B130B" stroke-width="8"/><rect x="2330" y="300" width="170" height="60" fill="#1B130B"/><text x="2415" y="342" text-anchor="middle" font-family="Russo One" font-size="30" fill="#E2372C">ВЫХОД</text></g>
+ <g transform="translate(2070,650)"><rect x="-60" y="-80" width="120" height="150" rx="8" fill="#B7302A" stroke="#1B130B" stroke-width="6"/><circle cx="0" cy="-15" r="30" fill="#F5F1E6" stroke="#1B130B" stroke-width="6"/><circle class="fbtn" cx="0" cy="-15" r="18" fill="#E2372C"/>
+ <text x="0" y="50" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="18" fill="#F5F1E6">ПЕНА</text></g>
+ <g transform="translate(1250,230)"><rect width="300" height="90" fill="#1B130B"/><text x="150" y="62" text-anchor="middle" font-family="Russo One" font-size="44" fill="#F5F1E6">СЕКТОР Б</text></g>
+ <rect x="2310" y="104" width="220" height="24" fill="#7A776C" stroke="#1B130B" stroke-width="5"/>
+ ${[2720, 3000].map((x) => `<circle cx="${x}" cy="120" r="18" fill="#9A968A" stroke="#1B130B" stroke-width="5"/>`).join("")}
+ <rect x="0" y="0" width="230" height="1080" fill="url(#dk)"/><defs><linearGradient id="dk"><stop offset="0" stop-color="#0B0906"/><stop offset="1" stop-color="#0B0906" stop-opacity="0"/></linearGradient></defs>`;
+SET.svg(back, 3200, 1080, w);
+const doorL = SET.svg(back, 152, 470, `<rect width="152" height="470" fill="#5D5A52" stroke="#1B130B" stroke-width="6"/><rect x="20" y="30" width="112" height="6" fill="#4A4840"/>`, { x: 268, y: 436 });
+const doorR = SET.svg(back, 152, 470, `<rect width="152" height="470" fill="#5D5A52" stroke="#1B130B" stroke-width="6"/><rect x="20" y="30" width="112" height="6" fill="#4A4840"/>`, { x: 420, y: 436 });
+const bossDoor = SET.svg(back, 250, 500, `<rect width="250" height="500" fill="#5D5A52" stroke="#1B130B" stroke-width="8"/><rect x="190" y="230" width="30" height="60" rx="6" fill="#2A2A26"/>`, { x: 2290, y: 400 });
+bossDoor.style.transformOrigin = "0% 50%";
+const vent = SET.svg(back, 220, 24, `<rect width="220" height="24" fill="#4A4840" stroke="#1B130B" stroke-width="5"/>${[30, 70, 110, 150, 190].map((x) => `<rect x="${x}" y="5" width="16" height="14" fill="#1B130B"/>`).join("")}`, { x: 2310, y: 104 });
+const floor = E.layer("floor", 1, { w: 3400 });
+SET.svg(floor, 3400, 1080, `<rect y="890" width="3400" height="190" fill="#CFCBC0"/><rect y="890" width="3400" height="10" fill="#A9A497"/>` + Array.from({ length: 22 }, (_, i) => `<path d="M${i * 160},900 L${i * 160 - 200 + i * 10},1080" stroke="#B9B4A6" stroke-width="3"/>`).join(""));
+const mid = E.layer("mid", 1, { w: 3400 });
+// наёмники за мешками + двое у двери
+const mercs = [1520, 1630, 1740, 1850, 1960].map((x, i) => { const m = C.make("merc", mid, { x, y: 975, sc: 0.8, seed: 60 + i }); m.give("R", "rifle"); Object.assign(m.st, { armRu: 40, armRl: 95, propR: 180, flipR: true, turn: -0.5, px: -1, brow: -1, bob: 30 }); return m; });
+[2180, 2620].forEach((x, i) => { const m = C.make("merc", mid, { x, y: 905, sc: 0.78, seed: 70 + i }); m.give("R", "rifle"); Object.assign(m.st, { armRu: 30, armRl: 90, propR: 180, flipR: true, turn: -0.5, px: -1, brow: -1 }); mercs.push(m); });
+const bags = E.layer("bags", 1, { w: 3400 });
+let bg = ""; for (let r = 0; r < 3; r++) for (let i = 0; i < 6 - r; i++) bg += `<ellipse cx="${1470 + i * 100 + r * 50}" cy="${960 - r * 58}" rx="62" ry="34" fill="#B8A578" stroke="#1B130B" stroke-width="6"/><path d="M${1430 + i * 100 + r * 50},${955 - r * 58} q40,-12 80,0" stroke="#8E7D55" stroke-width="4" fill="none"/>`;
+SET.svg(bags, 3400, 1080, bg);
+const mid2 = E.layer("mid2", 1, { w: 3400 });
+const glu = C.make("gluh", mid2, { x: 420, y: 905, sc: 0.85, seed: 5 });
+glu.give("R", "borscht"); Object.assign(glu.st, { armRu: 20, armRl: 60, propR: 0, smile: 1, op: 0 });
+const sch = C.make("schmidt", mid2, { x: -150, y: 1000, sc: 0.95, seed: 1 });
+Object.assign(sch.st, { op: 0, rot: 80, soot: 0.8, tear: 0, smile: -0.6, brow: 1, lid: 0.3, armLu: 150, armLl: 30, armRu: 120, armRl: 40, twitch: 1 });
+const bub = C.make("bublik", mid2, { x: 600, y: 1060, sc: 0.95, outfit: "undies", seed: 3 });
+bub.give("R", "can"); Object.assign(bub.st, { op: 0, legL: -78, legR: 78, armRu: 40, armRl: 150, propR: 0, soot: 0.5, smile: 0.5, turn: -0.3 });
+const boss = C.make("boss", mid2, { x: 2415, y: 905, sc: 1.2, seed: 9 });
+boss.give("R", "gatling"); Object.assign(boss.st, { armRu: 22, armRl: 82, propR: 180, flipR: true, armLu: 30, armLl: 90, op: 0, brow: -1, smile: -0.3, turn: -0.5, px: -1 });
+const luc = C.make("lucky", mid2, { x: 2420, y: -300, sc: 0.85, seed: 4 });
+Object.assign(luc.st, { soot: 0.7, smile: 1, eyeWide: 1, rot: 180 });
+const fx = E.fxLayer("fx", 1);
+// летящий брикет
+const brick = SET.svg(mid2, 120, 100, `<g transform="translate(60,70)">${(() => { const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); C.PROPS.borscht(g); return g.innerHTML; })()}</g>`);
+gsap.set(brick, { opacity: 0 });
+const near = E.layer("near", 1.35, { w: 4800, blur: 8 });
+SET.svg(near, 4800, 1080, `<rect y="0" width="4800" height="50" fill="#8E897B"/>` + [600, 2600, 4200].map((x) => `<path d="M${x},50 v60 h160 v-60" fill="none" stroke="#7A776C" stroke-width="18"/>`).join(""));
+const foamFront = E.fxLayer("foamFront", 1.25);
+
+// ── 0: двери лифта ──
+E.camSet({ cx: 420, cy: 660, s: 1.9 });
+tl.to(E.ov, { black: 0, duration: 0.4, ease: "power2.out" }, 0);
+E.camTo(0.05, { cx: 425, cy: 650, s: 1.75 }, TDOOR + 0.5, "sine.inOut");
+E.sfx(0.6, "beep", { f: 1320, dur: 0.25, gain: 0.08 }); E.sfx(0.9, "beep", { f: 990, dur: 0.35, gain: 0.07 });
+E.sfx(0, "hum", { dur: DUR });
+tl.to(doorL, { x: -150, duration: 0.6, ease: "power2.inOut" }, TDOOR); tl.to(doorR, { x: 150, duration: 0.6, ease: "power2.inOut" }, TDOOR);
+E.sfx(TDOOR, "doorOpen");
+// Глух выкатывается кувырком
+tl.to(glu.st, { op: 1, duration: 0.01 }, TDOOR + 0.4);
+tl.to(glu.st, { x: 760, duration: 0.8, ease: "power2.out" }, TDOOR + 0.5);
+tl.to(glu.st, { rot: 360, duration: 0.7, ease: "power2.out" }, TDOOR + 0.5);
+tl.to(glu.st, { sqy: 0.8, sqx: 1.2, duration: 0.08 }, TDOOR + 1.2); tl.to(glu.st, { sqy: 1, sqx: 1, duration: 0.5, ease: "elastic.out(1,0.4)" }, TDOOR + 1.28);
+E.sfx(TDOOR + 0.6, "thud", { gain: 0.3 }); E.sfx(TDOOR + 1.2, "thud", { gain: 0.4 });
+E.camTo(TDOOR + 0.6, { cx: 1170, cy: 560, s: 0.86, r: 0 }, 1.6, "power3.inOut");
+H.chapter(TDOOR + 1.3, 3, "БОЙНЯ В КОРИДОРЕ", 2.3, { left: "110px", top: "150px" });
+E.music(TDOOR + 0.6, TTHROW + 0.9 - TDOOR - 0.6, "action", { vol: 0.5 });
+// машет рукой
+for (let i = 0; i < 3; i++) { C.pose(glu, TWAVE + i * 0.4, { armLu: 160, armLl: 30 }, 0.2, "power2.out"); C.pose(glu, TWAVE + 0.2 + i * 0.4, { armLu: 140, armLl: 70 }, 0.2, "power2.in"); }
+C.pose(glu, TWAVE, { turn: 0.5, px: 1 }, 0.3);
+C.pose(glu, TWAVE + 1.25, { armLu: 10, armLl: 14 }, 0.3);
+mercs.forEach((m, i) => C.pose(m, TWAVE + 0.2 + i * 0.05, { eyeWide: 0.6, brow: 0.3 }, 0.3));
+// бросок брикета
+C.pose(glu, TTHROW - 0.3, { armRu: 150, armRl: 60, propR: 0 }, 0.3, "power2.out");
+C.pose(glu, TTHROW, { armRu: 60, armRl: 10 }, 0.15, "power3.in");
+E.at(TTHROW + 0.1, () => glu.give("R", null));
+gsap.set(brick, { x: 830, y: 480, rotation: 0 });
+tl.to(brick, { opacity: 1, duration: 0.01 }, TTHROW + 0.1);
+tl.to(brick, { x: 1640, duration: 0.8, ease: "none" }, TTHROW + 0.1);
+tl.to(brick, { y: 330, duration: 0.38, ease: "power2.out" }, TTHROW + 0.1); tl.to(brick, { y: 690, duration: 0.42, ease: "power2.in" }, TTHROW + 0.48);
+tl.to(brick, { rotation: 540, duration: 0.8, ease: "none" }, TTHROW + 0.1);
+E.sfx(TTHROW + 0.05, "whoosh", { dur: 0.5, gain: 0.15 }); E.sfx(TTHROW + 0.9, "thud", { gain: 0.25 });
+E.camTo(TTHROW, { cx: 1330, cy: 580, s: 0.95 }, 0.85, "power2.inOut");
+// «Эээ… Что это?»
+C.pose(mercs[1], T3A - 0.3, { bob: 0, turn: 0, px: 0, py: 1, eyeWide: 1, brow: 1 }, 0.35);
+E.say(mercs[1], "s3a", T3A);
+E.camTo(T3A - 0.3, { cx: 1640, cy: 640, s: 1.45, r: 1 }, 0.9, "power2.inOut");
+// брикет лопается красной пылью
+E.FXTYPES.powder = { life: 3, draw(ctx, u, p) { const R = E.rng(5); for (let i = 0; i < 18; i++) { const a = R() * 6.28, d = E.easeOut(u / 0.6) * (80 + R() * 160), r = 30 + E.easeOut(u / 1.2) * 70;
+  E.puff(ctx, p.x + Math.cos(a) * d, p.y + Math.sin(a) * d * 0.6 - u * 30, r, "rgba(170,40,34,0.85)", "rgba(170,40,34,0)", (1 - u / 3) * 0.9); } } };
+E.fx("fx", TBURST, "powder", { x: 1700, y: 740 }); tl.to(brick, { opacity: 0, duration: 0.03 }, TBURST);
+E.sfx(TBURST, "splat"); E.shake(TBURST, 5, 0.2);
+mercs.slice(0, 5).forEach((m, i) => C.pose(m, TBURST + 0.05, { soot: 0.6, eyeWide: 1, lid: 0.2 }, 0.2));
+// Глух зажал уши и ждёт (такт тишины)
+tl.set(E.cam, { cx: 770, cy: 600, s: 1.5, r: 0 }, TBURST + 0.4);
+E.camTo(TBURST + 0.42, { cx: 770, cy: 600, s: 1.62 }, TSHOT - TBURST - 0.5, "sine.inOut");
+C.pose(glu, TBURST + 0.4, { armLu: 150, armLl: 150, armRu: 150, armRl: 150, lid: 0.95, smile: 0.8, head: -4 }, 0.01);
+C.pose(glu, TBURST + 1.0, { head: 4 }, 0.5, "sine.inOut");
+// ── семь выстрелов из темноты ──
+tl.set(E.cam, { cx: 1480, cy: 600, s: 1.0, r: 0 }, TSHOT - 0.05);
+E.camTo(TSHOT, { cx: 1650, cy: 620, s: 1.08, r: -0.8 }, 2.0, "power1.out");
+E.music(TSHOT - 0.05, T3B - TSHOT + 0.05, "tension", { vol: 0.4 });
+mercs.forEach((m, i) => { const t = TSHOT + i * 0.27, hx = m.st.x, hy = m.st.y - m.st.sc * (m.st.bob ? 470 : 500);
+  E.fx("fx", t, "tracer", { x: 60, y: 560, x2: hx, y2: hy }); E.fx("fx", t - 0.02, "muzzle", { x: 70, y: 560, size: 0.8 });
+  E.sfx(t, "shot", { gain: 0.5 }); E.sfx(t + 0.12, "casing");
+  tl.to(m.st, { rot: i % 2 ? 82 : -82, y: m.st.y + 60, duration: 0.42, ease: "power2.in" }, t + 0.05);
+  tl.to(m.st, { lid: 1, mouthOpen: 0.4, duration: 0.05 }, t + 0.05);
+  E.sfx(t + 0.45, "thud", { gain: 0.25 }); E.shake(t, 3, 0.12); });
+// ── Грейвс по рации; Шмидт ползёт, Бублик жуёт ──
+E.say(null, "s3b", T3B); H.radio(T3B, "s3b", "ГРЕЙВС");
+tl.set([sch.st, bub.st], { op: 1 }, T3B - 0.2); tl.set(glu.st, { op: 0 }, T3B - 0.2);
+E.camTo(T3B - 0.2, { cx: 420, cy: 700, s: 1.25, r: 0 }, 1.6, "power3.inOut");
+tl.to(sch.st, { x: 40, duration: V("s3b") - 1.3, ease: "sine.inOut" }, T3B + 0.6);
+tl.to(sch.st, { walk: 6, walkAmp: 0.5, duration: V("s3b") - 1.3, ease: "none" }, T3B + 0.6);
+E.camTo(T3B + 1.45, { cx: 460, cy: 720, s: 1.3 }, V("s3b") - 1.5, "sine.inOut");
+for (let i = 0; i < 5; i++) { C.pose(bub, T3B + 0.3 + i * 1.1, { armRl: 160, mouthOpen: 0.85 }, 0.2, "power2.out"); C.pose(bub, T3B + 0.55 + i * 1.1, { armRl: 120, mouthOpen: 0 }, 0.25); E.sfx(T3B + 0.5 + i * 1.1, "chew", { dur: 0.4 }); }
+E.sfx(T3B + 0.6, "sand", { dur: V("s3b") - 1.3 });
+// садится и жалуется
+tl.to(sch.st, { rot: 0, x: 330, walkAmp: 0, y: 1065, legL: -78, legR: 78, armLu: 30, armLl: 50, armRu: 30, armRl: 50, lid: 0.1, turn: 0.2, px: 0.2, duration: 0.6, ease: "power2.inOut" }, TSIT);
+E.camTo(TSIT, { cx: 470, cy: 690, s: 1.7, r: 0 }, V("s3c") + 0.9, "sine.inOut");
+E.say(sch, "s3c", T3C);
+tl.to(sch.st, { tear: 1, duration: 0.5 }, T3C + 0.8);
+C.pose(sch, T3C + 2.6, { head: 8, turn: -0.2, px: -0.3, py: -1 }, 0.8, "sine.inOut");
+E.music(TSIT, V("s3c") + 0.9, "sad", { vol: 0.7 });
+// ── Босс выбивает дверь ──
+tl.to(bossDoor, { rotationY: -100, duration: 0.25, ease: "power3.in" }, TBOSS);
+tl.to(boss.st, { op: 1, duration: 0.01 }, TBOSS + 0.05);
+boss.st.x = 2415; C.walk(boss, TBOSS + 0.1, 2200, 0.9, { stride: 120 });
+E.sfx(TBOSS, "metal", { gain: 0.5 }); E.sfx(TBOSS, "boom", { size: 0.4 }); E.shake(TBOSS + 0.1, 16, 0.5);
+E.sfx(TBOSS + 0.1, "steps", { n: 4, dt: 0.25, gain: 0.25 });
+tl.set(E.cam, { cx: 1900, cy: 520, s: 0.95, r: 0 }, TBOSS);
+E.camTo(TBOSS + 0.02, { cx: 2150, cy: 430, s: 1.25, r: -1.5 }, TEYES - TBOSS - 0.1, "power2.inOut");
+E.say(boss, "s3d", T3D);
+E.sfx(T3D - 0.1, "braam", { dur: 2.6, note: 41, gain: 0.3 });
+C.pose(boss, T3D + 0.4, { lean: -4, brow: -1 }, 0.4);
+// Шмидт зажмуривается
+tl.set(E.cam, { cx: 340, cy: 650, s: 2.0, r: 0 }, TEYES);
+C.pose(sch, TEYES, { lid: 1, smile: -0.8, brow: 1, sqy: 0.95, tear: 1 }, 0.2, "power3.out");
+E.camTo(TEYES + 0.02, { cx: 340, cy: 640, s: 2.15 }, 0.95, "sine.inOut");
+tl.set(E.cam, { cx: 2200, cy: 420, s: 1.05, r: 0 }, TEYES + 1.0);
+tl.to(boss.st, { spin: 60, duration: 0.8, ease: "power2.in" }, TEYES + 0.2);
+E.sfx(TEYES + 0.2, "spin", { dur: 1.5 });
+// ── Лаки падает из вентиляции на голову Боссу ──
+tl.to(vent, { y: 700, rotation: 30, opacity: 0, duration: 0.55, ease: "power2.in" }, TLUCKY - 0.25);
+E.sfx(TLUCKY - 0.25, "metal", { gain: 0.35 });
+tl.to(luc.st, { y: 200, rot: 360, duration: 0.35, ease: "power2.in" }, TLUCKY - 0.25);
+tl.to(boss.st, { sqy: 0.82, sqx: 1.15, lid: 1, mouthOpen: 0.7, smile: -1, duration: 0.08 }, TLUCKY + 0.1);
+E.sfx(TLUCKY + 0.1, "whack"); E.sfx(TLUCKY + 0.12, "bonk"); E.shake(TLUCKY + 0.1, 14, 0.4);
+tl.to(boss.st, { spin: 0, duration: 0.6 }, TLUCKY + 0.1);
+tl.to(boss.st, { rot: -88, x: 2300, duration: 0.7, ease: "power3.in" }, TLUCKY + 0.35);
+tl.to(boss.st, { y: 960, duration: 0.7, ease: "power3.in" }, TLUCKY + 0.35);
+tl.to(luc.st, { x: 2050, y: 905, duration: 0.7, ease: "power2.in" }, TLUCKY + 0.35);
+tl.to(luc.st, { rot: 720, duration: 0.7 }, TLUCKY + 0.35);
+E.sfx(TLUCKY + 1.05, "thud", { gain: 0.9 }); E.shake(TLUCKY + 1.05, 18, 0.5); E.sfx(TLUCKY + 1.05, "metal", { gain: 0.4 });
+E.camTo(TLUCKY - 0.35, { cx: 2200, cy: 420, s: 0.78 }, 0.5, "power3.out");
+E.camTo(TLUCKY + 0.3, { cx: 2150, cy: 520, s: 0.95 }, 0.55, "power2.inOut");
+// пулемёт задевает кнопку пены
+const fbtn = back.querySelector(".fbtn");
+tl.to(fbtn, { attr: { r: 12 }, duration: 0.08 }, TFOAM - 0.1);
+E.sfx(TFOAM - 0.1, "click", { gain: 0.6 }); E.sfx(TFOAM, "beep", { f: 1500, dur: 0.4, gain: 0.1 });
+E.fx("fx", TFOAM, "foam", { x: 1000, y: 380, w: 2000, h: 600, n: 280, fill: 3.4, jets: [[1500, 120], [2100, 120], [2700, 120]] });
+E.sfx(TFOAM, "foam", { dur: DUR - TFOAM });
+E.camTo(TFOAM - 0.1, { cx: 1750, cy: 560, s: 0.9, r: 0.8 }, 1.3, "power2.inOut");
+[sch, bub, glu].forEach((c, i) => tl.set(c.st, { op: 0 }, TFOAM + 1.2));
+// ── «пенная вечеринка» ──
+tl.to(luc.st, { rot: 0, duration: 0.4, ease: "back.out(1.6)" }, T3E - 0.6);
+C.pose(luc, T3E - 0.4, { armLu: 40, armLl: 60, armRu: 40, armRl: 60, eyeWide: 0, smile: 1 }, 0.3);
+C.pose(luc, T3E - 0.1, { armLu: 160, armLl: 20, armRu: 160, armRl: 20 }, 0.4);
+E.camTo(T3E - 0.5, { cx: 2050, cy: 600, s: 1.35, r: 0 }, 1.0, "power3.inOut");
+E.say(luc, "s3e", T3E);
+E.music(T3E + 1.3, DUR - T3E - 1.3, "disco", { vol: 0.75 });
+const disco = H.el("", { inset: 0, width: "1920px", height: "1080px", mixBlendMode: "screen", opacity: 0 }); E.hud.insertBefore(disco, E.hud.firstChild);
+E.onFrame((t) => { const u = t - (T3E + 1.3); if (u < 0) { disco.style.opacity = 0; return; } const c = ["#FF4A8A", "#4AD6FF", "#FFD64A", "#8AFF6A"][Math.floor(u * 2.05) % 4];
+  disco.style.background = `radial-gradient(circle 700px at ${50 + Math.sin(u * 2) * 30}% 40%, ${c}, transparent)`; disco.style.opacity = 0.35; });
+for (let i = 0; i < 6; i++) { const t = T3E + 1.3 + i * 0.49; C.pose(luc, t, { lean: i % 2 ? 6 : -6, head: i % 2 ? -8 : 8, bob: 10 }, 0.22, "power2.out"); C.pose(luc, t + 0.25, { bob: 0 }, 0.22); }
+E.camTo(T3E + 0.55, { cx: 2050, cy: 610, s: 1.45 }, DUR - T3E - 1.6, "sine.inOut");
+// пена накрывает объектив → белый
+E.fx("foamFront", DUR - 1.4, "foam", { x: 0, y: 200, w: 2600, h: 1100, n: 220, fill: 1.2, seed: 9 });
+tl.to(E.ov, { flash: 1, flashColor: "#FAF7EE", duration: 0.5, ease: "power2.in" }, DUR - 0.5);
+gsap.set(E.ov, { flashColor: "#FAF7EE" });
+E.glitch(0.05, 0.3, 0.7);
+// ч/б драматический момент (по разбору трейлера): плач Шмидта
+tl.to(E.ov, { gray: 1, grade: 0.15, duration: 1.2, ease: "power2.inOut" }, TSIT + 0.2);
+tl.to(E.ov, { gray: 0, grade: 0.55, duration: 0.15 }, TBOSS);
+E.frame();
+</script></body></html>

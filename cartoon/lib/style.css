@@ -1,0 +1,38 @@
+@import url("../fonts/fonts.css");
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+#root { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; font-family: "Rubik", sans-serif; }
+#camera, #float, #shake, #layers { position: absolute; inset: 0; transform-origin: 960px 540px; }
+.layer { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+canvas.layer.fx { width: 1920px; height: 1080px; transform: none !important; }
+.char { position: absolute; left: 0; top: 0; width: 900px; height: 900px; pointer-events: none; }
+.char svg { overflow: visible; }
+.glow { position: absolute; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; }
+.abs { position: absolute; }
+#grain { position: absolute; inset: 0; width: 1920px; height: 1080px; mix-blend-mode: overlay; pointer-events: none; }
+#grade { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
+  background: linear-gradient(180deg, rgba(255,196,110,0.55) 0%, rgba(255,170,80,0.25) 50%, rgba(60,30,10,0.45) 100%); }
+#vignette { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 78% 74% at 50% 48%, rgba(0,0,0,0) 55%, rgba(8,5,2,0.9) 100%); }
+.lb { position: absolute; left: 0; width: 1920px; height: 0; background: #050403; z-index: 5; }
+#lbTop { top: 0; } #lbBot { bottom: 0; }
+#hud { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+#flash, #black { position: absolute; inset: 0; pointer-events: none; z-index: 8; }
+#black { background: #000; }
+#startBtn { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 99; font: 700 28px Oswald, sans-serif; padding: 18px 40px;
+  background: #E9B949; color: #16120C; border: 0; cursor: pointer; letter-spacing: .1em; }
+
+/* типографика трейлера */
+.logo { font-family: "Russo One", sans-serif; color: #F5F1E6; line-height: .86; letter-spacing: -.01em; text-transform: uppercase;
+  text-shadow: 0 6px 0 rgba(0,0,0,.35), 0 0 60px rgba(0,0,0,.35); white-space: nowrap; }
+.tag { font-family: "Oswald", sans-serif; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+.tag.y { background: #E9B949; color: #16120C; padding: 6px 22px 8px; }
+.tag.w { color: #F5F1E6; }
+.box { border: 8px solid #F5F1E6; border-radius: 6px; color: #F5F1E6; font-family: "Oswald", sans-serif; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; padding: 10px 34px 14px; white-space: nowrap; }
+.word { position: absolute; font-family: "Russo One", sans-serif; color: #F5F1E6; text-transform: uppercase; white-space: nowrap; transform-origin: 50% 60%;
+  text-shadow: 0 10px 0 rgba(0,0,0,.3); }
+.sub { font-family: "Rubik", sans-serif; font-weight: 700; color: #F5F1E6; }
+.radio { font-family: "Oswald", sans-serif; font-weight: 700; color: #E9B949; letter-spacing: .14em; }
+
+#glitch { position: absolute; inset: 0; pointer-events: none; z-index: 7; }
+.gb { position: absolute; display: none; mix-blend-mode: difference; }
