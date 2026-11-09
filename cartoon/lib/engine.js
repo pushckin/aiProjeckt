@@ -34,14 +34,15 @@
       <div id="grade"></div><div id="vignette"></div>
       <div id="lbTop" class="lb"></div><div id="lbBot" class="lb"></div>
       <div id="hud"></div>
-      <div id="flash"></div><div id="black"></div>`;
+      <div id="glitch"></div><div id="flash"></div><div id="black"></div>`;
     E.layersEl = root.querySelector("#layers");
     E.hud = root.querySelector("#hud");
     const tl = gsap.timeline({ paused: true });
     E.tl = tl; window.__timelines = { main: tl };
     tl.set({}, {}, duration); // таймлайн ровно нужной длины
     // экранные оверлеи — простые объекты-состояния
-    E.ov = { flash: 0, black: 0, lb: 0, vig: 0.55, grade: 1, grain: 0.07, flashColor: "#FFF6DF" };
+    E.ov = { flash: 0, black: 0, lb: 0, vig: 0.55, grade: 1, grain: 0.07, flashColor: "#FFF6DF", blur: 0, gray: 0 };
+    const gl = root.querySelector("#glitch"); E.glBlocks = Array.from({ length: 18 }, () => E.el("div", { class: "gb" }, gl));
     gsap.set("#flash", { opacity: 0 }); gsap.set("#black", { opacity: 0 });
     // масштаб под окно (рендер снимает #root по его прямоугольнику)
     const fit = () => { const s = Math.min(innerWidth / 1920, innerHeight / 1080);
@@ -57,6 +58,11 @@
     return tl;
   };
   E.at = (t, fn) => E.tl.call(fn, null, t);
+  // глитч: блочные пиксельные помехи + RGB-расслоение (по разбору трейлера WARDOGS)
+  const glitches = []; E.glitches = glitches;
+  E.glitch = (t, dur = 0.32, amp = 1, { sound = true } = {}) => { glitches.push({ t, dur, amp }); if (sound && E.sfx) E.sfx(t, "glitch", { dur }); };
+  const glitchAmt = (t) => { let a = 0; for (const g of glitches) { const u = (t - g.t) / g.dur; if (u >= 0 && u <= 1) a = Math.max(a, g.amp * Math.sin(u * Math.PI)); } return a; };
+  E.glitchAmt = glitchAmt;
 
   // ───────────────────────── камера ─────────────────────────
   E.cam = { cx: 960, cy: 540, s: 1, r: 0 };
@@ -115,8 +121,17 @@
         for (const it of L.items) { const u = t - it.t; const f = FX[it.type]; if (!f) continue; if (u < 0 || u > (it.p.life || f.life || 6)) continue; ctx.save(); f.draw(ctx, u, it.p, t); ctx.restore(); }
       }
     }
-    // оверлеи
-    const o = E.ov;
+    // фильтры слоёв: размытие, ч/б, RGB-расслоение глитча
+    const o = E.ov, ga = glitchAmt(t), fr = Math.floor(g * 30);
+    let f = "";
+    if (o.blur > 0.05) f += `blur(${o.blur}px) `;
+    if (o.gray > 0.01) f += `grayscale(${o.gray}) contrast(${1 + 0.3 * o.gray}) `;
+    if (ga > 0.02) { const d = (6 + 10 * E.hash(fr)) * ga; f += `drop-shadow(${d}px 0 0 rgba(255,40,40,0.75)) drop-shadow(${-d}px 0 0 rgba(40,255,255,0.75)) `; }
+    E.layersEl.style.filter = f || "none";
+    E.glBlocks.forEach((b, i) => { if (ga < 0.05 || E.hash(fr * 13 + i) > 0.35 + 0.5 * ga) { b.style.display = "none"; return; }
+      const r = E.rng(fr * 31 + i * 7); b.style.display = "block";
+      Object.assign(b.style, { left: r() * 1920 + "px", top: r() * 1080 + "px", width: 40 + r() * 380 * ga + "px", height: 12 + r() * 90 + "px",
+        background: ["#E9B949", "#F5F1E6", "#1B130B", "#E2372C", "#2AE"][Math.floor(r() * 5)], opacity: 0.5 + 0.5 * r(), transform: `translateX(${(r() - 0.5) * 80 * ga}px)` }); });
     document.getElementById("flash").style.opacity = o.flash;
     document.getElementById("flash").style.background = o.flashColor;
     document.getElementById("black").style.opacity = o.black;

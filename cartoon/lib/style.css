@@ -33,3 +33,6 @@ canvas.layer.fx { width: 1920px; height: 1080px; transform: none !important; }
   text-shadow: 0 10px 0 rgba(0,0,0,.3); }
 .sub { font-family: "Rubik", sans-serif; font-weight: 700; color: #F5F1E6; }
 .radio { font-family: "Oswald", sans-serif; font-weight: 700; color: #E9B949; letter-spacing: .14em; }
+
+#glitch { position: absolute; inset: 0; pointer-events: none; z-index: 7; }
+.gb { position: absolute; display: none; mix-blend-mode: difference; }

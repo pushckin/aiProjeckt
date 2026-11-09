@@ -10,7 +10,11 @@
 const SLOT = [2700, 4200, 5700, 7200, 8700];
 const LINE = [8040, 8370, 8700, 9030, 9360];
 const R1 = E.vdur("r1"), R2 = E.vdur("r2"), R3 = E.vdur("r3"), R4 = E.vdur("r4"), R5 = E.vdur("r5");
-const TS = [10.2]; [R1, R2, R3, R4].forEach((d, i) => TS.push(TS[i] + d + 0.95));
+const VV = (id) => E.vdur(id), H1 = 1.0, H2 = H1 + VV("n1a") + 0.3, H3 = H2 + VV("n1b") + 0.3;
+const TB = H3 + VV("n1c") + 0.45;
+const N2A = TB + 0.45, N2B = N2A + VV("n2a") + 0.25, N2W = N2B + VV("n2b") * 0.42, N2E = N2B + VV("n2b");
+const TW = Math.max(TB + 4.8, N2E + 2.0);
+const TS = [TW + 0.85]; [R1, R2, R3, R4].forEach((d, i) => TS.push(TS[i] + d + 0.95));
 const T_END_RC = TS[4] + R5 + 0.9, DUR = T_END_RC + 3.6;
 const tl = E.init({ duration: DUR, partStart: 0 });
 E.ov.lb = 0; E.ov.black = 1;
@@ -68,22 +72,21 @@ glu.give("R", "detonator"); Object.assign(glu.st, { armRu: 25, armRl: 95, propR:
 // ── камера: старт крупно на гребне ──
 E.camSet({ cx: 980, cy: 620, s: 1.28, r: -1.2 });
 tl.to(E.ov, { black: 0, duration: 1.4, ease: "power2.out" }, 0.1);
-E.camTo(0.1, { cx: 960, cy: 560, s: 1.12, r: 0 }, 4.3, "power1.inOut");
+E.camTo(0.1, { cx: 960, cy: 560, s: 1.12, r: 0 }, TB - 0.25, "power1.inOut");
 
 // хук: три удара слов
-E.say(null, "n1a", 1.0); E.say(null, "n1b", 2.2); E.say(null, "n1c", 3.4);
-H.slam("ПЯТЬ БОЙЦОВ", 0.98, 0.72, { size: 210, y: 470 });
-H.slam("ОДНА МИССИЯ", 2.18, 0.76, { size: 210, y: 470 });
-H.slam("НОЛЬ ШАНСОВ", 3.38, 0.62, { size: 230, y: 470, color: "#E9B949" });
-[0.98, 2.18, 3.38].forEach((t, i) => { E.sfx(t, "taiko", { gain: 0.8 }); E.sfx(t, "hit", { gain: 0.22 }); E.shake(t, 5, 0.25); });
+E.say(null, "n1a", H1); E.say(null, "n1b", H2); E.say(null, "n1c", H3);
+H.slam("ПЯТЬ БОЙЦОВ", H1 - 0.02, VV("n1a") - 0.1, { size: 210, y: 470 });
+H.slam("ОДНА МИССИЯ", H2 - 0.02, VV("n1b") - 0.1, { size: 210, y: 470 });
+H.slam("НОЛЬ ШАНСОВ", H3 - 0.02, VV("n1c") - 0.2, { size: 230, y: 470, color: "#E9B949" });
+[H1 - 0.02, H2 - 0.02, H3 - 0.02].forEach((t, i) => { E.sfx(t, "taiko", { gain: 0.8 }); E.sfx(t, "hit", { gain: 0.22 }); E.shake(t, 5, 0.25); });
 // силуэты отряда делают шаг вперёд на каждом ударе
-sils.forEach((c, i) => C.pose(c, 0.98 + (i % 3) * 1.2, { bob: -6 }, 0.3));
-E.music(0.2, 4.35, "drone", { vol: 1 });
+sils.forEach((c, i) => C.pose(c, [H1, H2, H3][i % 3], { bob: -6 }, 0.3));
+E.music(0.2, TB - 0.15, "drone", { vol: 1 });
 E.sfx(0.3, "wind", { dur: 9, gain: 0.07 });
-E.sfx(3.4, "riser", { dur: 1.1, gain: 0.16 });
+E.sfx(H3, "riser", { dur: TB - H3, gain: 0.16 });
 
 // ── взрыв и логотип (композиция обложки) ──
-const TB = 4.55;
 tl.to(silL, { opacity: 0, duration: 0.5, ease: "power2.in" }, TB + 0.1);
 E.fx("fxBack", TB, "explosion", { x: 1250, y: 840, size: 2.6, seed: 3 });
 tl.to(E.ov, { flash: 0.85, duration: 0.06, ease: "power1.out" }, TB); tl.to(E.ov, { flash: 0, duration: 0.9, ease: "power2.out" }, TB + 0.08);
@@ -92,7 +95,7 @@ E.camTo(TB, { cx: 960, cy: 540, s: 1.0, r: 0.6 }, 4.6, "power2.out");
 tl.to(schBig.st, { op: 1, duration: 0.01 }, TB);
 schBig.st.y = 1620; tl.to(schBig.st, { y: 1560, duration: 4.6, ease: "power2.out" }, TB);
 tl.to(schBig.st, { twitch: 1, duration: 0.3 }, TB + 3);
-E.music(TB, 4.9, "trailer", { vol: 0.85 });
+E.music(TB, Math.max(TB + 4.8, N2E + 1.6) - TB + 0.6, "trailer", { vol: 0.85 });
 
 const logo = H.el(`<div class="tag y" style="font-size:54px;display:inline-block">ОПЕРАЦИЯ</div>
  <div class="logo l1" style="font-size:236px;margin-top:22px">ХУЙНЮ</div>
@@ -102,27 +105,26 @@ const logo = H.el(`<div class="tag y" style="font-size:54px;display:inline-block
 const lk = [...logo.children];
 lk.forEach((n) => gsap.set(n, { opacity: 0 }));
 // тег — на «Операция», слова — ударами на «Хуйню не творить»
-E.say(null, "n2a", TB + 0.45); E.say(null, "n2b", TB + 1.35);
+E.say(null, "n2a", N2A); E.say(null, "n2b", N2B);
 const pop = (n, t, from = 1.5) => { gsap.set(n, { scale: from, filter: "blur(14px)", transformOrigin: "0% 60%" });
   tl.to(n, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.26, ease: "power3.out" }, t); };
-gsap.set(lk[0], { clipPath: "inset(0% 100% 0% 0%)", opacity: 1 }); tl.to(lk[0], { clipPath: "inset(0% 0% 0% 0%)", duration: 0.45, ease: "power3.out" }, TB + 0.42);
-pop(lk[1], TB + 1.36); pop(lk[2], TB + 1.86, 1.35);
-gsap.set(lk[3], { clipPath: "inset(0% 100% 0% 0%)", opacity: 1 }); tl.to(lk[3], { clipPath: "inset(0% 0% 0% 0%)", duration: 0.6, ease: "power3.out" }, TB + 2.4);
-gsap.set(lk[4], { y: 40 }); tl.to(lk[4], { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.6)" }, TB + 2.8);
-[TB + 1.36, TB + 1.86].forEach((t) => { E.sfx(t, "taiko", { gain: 0.9 }); E.sfx(t, "hit", { gain: 0.26 }); E.shake(t, 7, 0.25); });
-E.sfx(TB + 0.42, "whoosh", { dur: 0.4, gain: 0.12 }); E.sfx(TB + 2.4, "whoosh", { dur: 0.5, gain: 0.12 }); E.sfx(TB + 2.8, "thud", { gain: 0.3 });
+gsap.set(lk[0], { clipPath: "inset(0% 100% 0% 0%)", opacity: 1 }); tl.to(lk[0], { clipPath: "inset(0% 0% 0% 0%)", duration: 0.45, ease: "power3.out" }, N2A - 0.03);
+pop(lk[1], N2B); pop(lk[2], N2W, 1.35);
+gsap.set(lk[3], { clipPath: "inset(0% 100% 0% 0%)", opacity: 1 }); tl.to(lk[3], { clipPath: "inset(0% 0% 0% 0%)", duration: 0.6, ease: "power3.out" }, N2E + 0.1);
+gsap.set(lk[4], { y: 40 }); tl.to(lk[4], { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.6)" }, N2E + 0.5);
+[N2B, N2W].forEach((t) => { E.sfx(t, "taiko", { gain: 0.9 }); E.sfx(t, "hit", { gain: 0.26 }); E.shake(t, 7, 0.25); });
+E.sfx(N2A - 0.03, "whoosh", { dur: 0.4, gain: 0.12 }); E.sfx(N2E + 0.1, "whoosh", { dur: 0.5, gain: 0.12 }); E.sfx(N2E + 0.5, "thud", { gain: 0.3 });
 // блик по логотипу
 const shine = H.el(`<div style="width:180px;height:900px;background:linear-gradient(90deg,transparent,rgba(255,250,230,0.55),transparent);transform:rotate(18deg)"></div>`, { left: "-300px", top: "120px", mixBlendMode: "overlay" });
-tl.to(shine, { x: 1500, duration: 1.1, ease: "power2.inOut" }, TB + 3.1); tl.to(shine, { opacity: 0, duration: 0.2 }, TB + 4.1);
+tl.to(shine, { x: 1500, duration: 1.1, ease: "power2.inOut" }, N2E + 0.8); tl.to(shine, { opacity: 0, duration: 0.2 }, N2E + 1.8);
 
 // ── уход логотипа и вжух к перекличке ──
-const TW = 9.35;
 lk.forEach((n, i) => tl.to(n, { x: -120, opacity: 0, filter: "blur(10px)", duration: 0.35, ease: "power2.in" }, TW - 0.05 + i * 0.04));
 tl.to(schBig.st, { x: 1200, duration: 0.7, ease: "power3.in" }, TW);
 tl.to(schBig.st, { op: 0, duration: 0.2 }, TW + 0.5);
 E.camTo(TW, { cx: SLOT[0] - 380, cy: 540, s: 1, r: 0 }, 0.85, "power3.inOut");
-const blurOn = (t, d = 0.85) => { tl.to("#layers", { filter: "blur(10px)", duration: d * 0.45, ease: "power2.in" }, t); tl.to("#layers", { filter: "blur(0px)", duration: d * 0.55, ease: "power2.out" }, t + d * 0.45); };
-gsap.set("#layers", { filter: "blur(0px)" });
+const blurOn = (t, d = 0.85) => { tl.to(E.ov, { blur: 10, duration: d * 0.45, ease: "power2.in" }, t); tl.to(E.ov, { blur: 0, duration: d * 0.55, ease: "power2.out" }, t + d * 0.45); };
+gsap.set(E.ov, { blur: 0 });
 blurOn(TW); E.sfx(TW, "whoosh", { dur: 0.8, gain: 0.25 });
 
 // ── перекличка ──
@@ -193,5 +195,8 @@ E.sfx(DUR - 0.9, "thunder", { gain: 0.45 }); E.sfx(DUR - 1.4, "rain", { dur: 1.4
 
 // вертолёты и винты
 E.onFrame((t) => { helis.forEach((h, i) => { h.style.transform = `translate(${t * (22 + i * 9)}px,${Math.sin(t * 0.8 + i) * 10}px)`; h.querySelectorAll(".rotor").forEach((r) => r.setAttribute("transform", `scale(${Math.cos(t * 38 + i)},1)`)); }); });
+// глитч-приёмы из разбора трейлера WARDOGS
+E.glitch(TW + 0.25, 0.35, 1); E.glitch(TF - 0.12, 0.25, 0.8);
+H.glitchText(lk[1], N2B, 0.35); H.glitchText(lk[2], N2W, 0.35); H.glitchText(lk[0], TW - 0.05, 0.35);
 E.frame();
 </script></body></html>

@@ -82,9 +82,9 @@ const red = H.el("", { inset: 0, width: "1920px", height: "1080px", background: 
 E.hud.insertBefore(red, E.hud.firstChild);
 
 // ── 0: выход из вжуха, общий план ──
-gsap.set("#layers", { filter: "blur(14px)" });
+gsap.set(E.ov, { blur: 14 });
 E.camSet({ cx: 1300, cy: 540, s: 0.95, r: 2 });
-tl.to("#layers", { filter: "blur(0px)", duration: 0.5, ease: "power2.out" }, 0);
+tl.to(E.ov, { blur: 0, duration: 0.5, ease: "power2.out" }, 0);
 E.camTo(0, { cx: 1700, cy: 560, s: 0.84, r: 0 }, 3.0, "power3.out");
 H.chapter(0.5, 2, "ПРОНИКНОВЕНИЕ", 2.0, { left: "110px", top: "150px" });
 E.music(0, TDROP + 0.4, "stealth", { vol: 0.6 });
@@ -99,9 +99,9 @@ E.say(gra, "s2a", T2A); H.radio(T2A, "s2a", "ГРЕЙВС");
 // нырок в прицел → вид через оптику на часового
 const scopeX = 3800 - 170, scopeY = 300;
 E.camTo(TSC - 0.22, { cx: 3600, cy: 60, s: 3.2 }, 0.22, "power3.in");
-tl.to("#layers", { filter: "blur(6px)", duration: 0.2 }, TSC - 0.2);
+tl.to(E.ov, { blur: 6, duration: 0.2 }, TSC - 0.2);
 tl.set(E.cam, { cx: 830, cy: 640, s: 2.0, r: 0 }, TSC);
-tl.set("#layers", { filter: "blur(0px)" }, TSC);
+tl.set(E.ov, { blur: 0 }, TSC);
 tl.to(E.ov, { flash: 0.5, duration: 0.04 }, TSC - 0.04); tl.to(E.ov, { flash: 0, duration: 0.3 }, TSC + 0.02);
 tl.to(scope, { opacity: 1, duration: 0.01 }, TSC);
 E.camTo(TSC + 0.02, { cx: 800, cy: 630, s: 2.15, r: 0 }, T2B - TSC - 0.45, "sine.inOut");
@@ -208,5 +208,6 @@ E.sfx(DUR - 0.4, "whoosh", { dur: 0.5, gain: 0.25 });
 
 // прожекторы шарят
 E.onFrame((t) => { beamA.style.transform = `rotate(${-28 + Math.sin(t * 0.5) * 22}deg) scaleX(6)`; beamB.style.transform = `rotate(${26 + Math.sin(t * 0.43 + 2) * 22}deg) scaleX(6)`; });
+E.glitch(0.02, 0.35, 0.9); E.glitch(TSC - 0.18, 0.45, 0.6, { sound: false });
 E.frame();
 </script></body></html>

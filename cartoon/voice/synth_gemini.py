@@ -50,38 +50,44 @@ norm = lambda s: re.sub(r"[^а-яё ]", "", s.lower().replace("ё", "е")).split
 def similar(a, b):
     A, B = norm(a), norm(b); return len(set(A) & set(B)) / max(1, len(set(B)))
 
-lines = json.load(open(os.path.join(HERE, "lines.json"), encoding="utf-8"))["lines"]
-only = set(sys.argv[1:]); os.makedirs(os.path.join(HERE, "graw"), exist_ok=True); os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
+def main():
+    global lines, only
+    lines = json.load(open(os.path.join(HERE, "lines.json"), encoding="utf-8"))["lines"]
+    only = set(sys.argv[1:]); os.makedirs(os.path.join(HERE, "graw"), exist_ok=True); os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
 
-def one(ln):
-    vid, fx = CAST[ln["v"]]; raw = os.path.join(HERE, "graw", ln["id"] + ".wav"); best = None
-    for attempt in range(3):
-        if not tts(vid, f"[{TAG[ln['id']]}] {ln['t']}", raw): continue
-        got = transcribe(raw); sc = similar(got, ln["t"])
-        if best is None or sc > best[0]: best = (sc, got, open(raw, "rb").read())
-        if sc >= 0.85: break
-    if best is None: return ln["id"], "FAIL", ""
-    open(raw, "wb").write(best[2]); return ln["id"], round(best[0], 2), best[1]
+    def one(ln):
+        vid, fx = CAST[ln["v"]]; raw = os.path.join(HERE, "graw", ln["id"] + ".wav"); best = None
+        for attempt in range(3):
+            if not tts(vid, f"[{TAG[ln['id']]}] {ln['t']}", raw): continue
+            got = transcribe(raw); sc = similar(got, ln["t"])
+            if best is None or sc > best[0]: best = (sc, got, open(raw, "rb").read())
+            if sc >= 0.85: break
+        if best is None: return ln["id"], "FAIL", ""
+        open(raw, "wb").write(best[2]); return ln["id"], round(best[0], 2), best[1]
 
-todo = [l for l in lines if not only or l["id"] in only]
-with ThreadPoolExecutor(4) as ex: res = list(ex.map(one, todo))
-for r in res: print(*r)
+    todo = [l for l in lines if not only or l["id"] in only]
+    with ThreadPoolExecutor(4) as ex: res = list(ex.map(one, todo))
+    for r in res: print(*r)
 
-timing_path = os.path.join(HERE, "timing.json")
-timing = json.load(open(timing_path)) if os.path.exists(timing_path) else {}
-for ln in todo:
-    raw = os.path.join(HERE, "graw", ln["id"] + ".wav"); out = os.path.join(HERE, "out", ln["id"] + ".wav")
-    if not os.path.exists(raw): continue
-    chain = "aresample=48000," + FX[CAST[ln["v"]][1]] + ",silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.03,areverse," \
-            "silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.08,areverse,loudnorm=I=-16:TP=-2:LRA=9,aresample=48000"
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-af", chain, "-ac", "1", "-ar", "48000", out], check=True)
-    a, sr = sf.read(out)
-    if "cut" in ln: n = int(0.03 * sr); a[-n:] *= np.linspace(1, 0, n); sf.write(out, a, sr)
-    hop = sr // 60; rms = np.array([np.sqrt((a[i:i + hop] ** 2).mean()) for i in range(0, len(a) - hop + 1, hop)])
-    env = np.convolve(np.clip(rms / (np.percentile(rms, 95) + 1e-6), 0, 1), [0.25, 0.5, 0.25], "same")
-    timing[ln["id"]] = {"v": ln["v"], "t": ln["t"], "dur": round(len(a) / sr, 3), "env": [round(float(x), 2) for x in env]}
-    print(f"{ln['id']:5s} {len(a)/sr:5.2f}s")
-json.dump(timing, open(timing_path, "w"), ensure_ascii=False)
-open(os.path.join(HERE, "..", "lib", "voicedata.js"), "w", encoding="utf-8").write(
-    "window.VOICE=" + json.dumps({k: {"v": d["v"], "dur": d["dur"], "env": d["env"]} for k, d in timing.items()}) + ";\n")
-print("total voice", round(sum(timing[l["id"]]["dur"] for l in lines if l["id"] in timing), 1), "s")
+    timing_path = os.path.join(HERE, "timing.json")
+    timing = json.load(open(timing_path)) if os.path.exists(timing_path) else {}
+    for ln in todo:
+        raw = os.path.join(HERE, "graw", ln["id"] + ".wav"); out = os.path.join(HERE, "out", ln["id"] + ".wav")
+        if not os.path.exists(raw): continue
+        chain = "aresample=48000," + FX[CAST[ln["v"]][1]] + ",silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.03,areverse," \
+                "silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.08,areverse,loudnorm=I=-16:TP=-2:LRA=9,aresample=48000"
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-af", chain, "-ac", "1", "-ar", "48000", out], check=True)
+        a, sr = sf.read(out)
+        if "cut" in ln: n = int(0.03 * sr); a[-n:] *= np.linspace(1, 0, n); sf.write(out, a, sr)
+        hop = sr // 60; rms = np.array([np.sqrt((a[i:i + hop] ** 2).mean()) for i in range(0, len(a) - hop + 1, hop)])
+        env = np.convolve(np.clip(rms / (np.percentile(rms, 95) + 1e-6), 0, 1), [0.25, 0.5, 0.25], "same")
+        timing[ln["id"]] = {"v": ln["v"], "t": ln["t"], "dur": round(len(a) / sr, 3), "env": [round(float(x), 2) for x in env]}
+        print(f"{ln['id']:5s} {len(a)/sr:5.2f}s")
+    json.dump(timing, open(timing_path, "w"), ensure_ascii=False)
+    open(os.path.join(HERE, "..", "lib", "voicedata.js"), "w", encoding="utf-8").write(
+        "window.VOICE=" + json.dumps({k: {"v": d["v"], "dur": d["dur"], "env": d["env"]} for k, d in timing.items()}) + ";\n")
+    print("total voice", round(sum(timing[l["id"]]["dur"] for l in lines if l["id"] in timing), 1), "s")
+
+
+if __name__ == "__main__":
+    main()

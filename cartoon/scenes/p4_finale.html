@@ -166,5 +166,6 @@ tl.to(E.ov, { flash: 1, duration: 1.4, ease: "power2.in" }, DUR - 1.45);
 tl.set([heli], { opacity: 0 }, TBOOM + 0.2);
 [sch2, bub, luc, glu, gra].forEach((c) => tl.set(c.st, { op: 0 }, TBOOM + 0.4));
 tl.set(battery, { opacity: 0 }, TBOOM);
+E.glitch(TOUT - 0.12, 0.35, 1); E.glitch(TT3 - 0.08, 0.2, 0.6);
 E.frame();
 </script></body></html>

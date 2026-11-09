@@ -15,3 +15,5 @@ voice/timing_piper.json
 voice/gemini_synth.*
 render/p5.mp4
 voice/__pycache__/
+voice/batch*.log
+voice/batch*.err

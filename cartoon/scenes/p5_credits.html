@@ -65,9 +65,9 @@ E.fx("fx", 0, "motes", { n: 90, color: "120,100,85", a: 0.6, size: 4, fall: 45, 
 
 tl.set(dz, { opacity: 1 }, TPOST + 1.2);
 tl.set([crBg, ashCr.el], { opacity: 0 }, TPOST + 1.2);
-gsap.set("#layers", { filter: "blur(0px)" });
-tl.set("#layers", { filter: "blur(18px)" }, TPOST + 1.2);
-tl.to("#layers", { filter: "blur(0px)", duration: 1.2, ease: "power2.out" }, TPOST + 1.25);
+gsap.set(E.ov, { blur: 0 });
+tl.set(E.ov, { blur: 18 }, TPOST + 1.2);
+tl.to(E.ov, { blur: 0, duration: 1.2, ease: "power2.out" }, TPOST + 1.25);
 E.camSet({ cx: 960, cy: 560, s: 1.0 });
 tl.set(E.cam, { cx: 1100, cy: 520, s: 0.92 }, TPOST + 1.2);
 E.camTo(TPOST + 1.22, { cx: 1000, cy: 600, s: 1.05 }, TLUCK - TPOST - 1.3, "sine.inOut");
@@ -113,5 +113,6 @@ tl.to(endL, { scaleY: 0.02, scaleX: 1.15, filter: "brightness(3)", duration: 0.1
 tl.to(endL, { scaleX: 0.01, duration: 0.2, ease: "power3.in" }, DUR - 0.82);
 tl.to(endL, { opacity: 0, duration: 0.2 }, DUR - 0.6);
 E.sfx(DUR - 1.0, "zap", { dur: 0.35 });
+E.glitch(TPOST + 1.1, 0.35, 0.9); H.glitchText(endL, TEND + 0.7, 0.45);
 E.frame();
 </script></body></html>

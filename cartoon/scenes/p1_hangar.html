@@ -211,8 +211,8 @@ C.pose(sch, TSAL + 1.6, { armLu: 40, armLl: 160, head: 6, lid: 0.8, twitch: 0 },
 E.sfx(TSAL + 2.2, "whoosh", { dur: 0.4, gain: 0.04 });
 // вжух-шов в следующую главу
 E.camTo(DUR - 0.75, { cx: 1900, cy: 560, s: 1.3, r: 3 }, 0.75, "power3.in");
-tl.to("#layers", { filter: "blur(14px)", duration: 0.6, ease: "power2.in" }, DUR - 0.65);
-gsap.set("#layers", { filter: "blur(0px)" });
+tl.to(E.ov, { blur: 14, duration: 0.6, ease: "power2.in" }, DUR - 0.65);
+gsap.set(E.ov, { blur: 0 });
 E.sfx(DUR - 0.75, "whoosh", { dur: 0.9, gain: 0.25 });
 E.music(TSAL + 1.4, DUR - TSAL - 1.4, "stealth", { vol: 0.5 });
 
@@ -220,5 +220,6 @@ E.music(TSAL + 1.4, DUR - TSAL - 1.4, "stealth", { vol: 0.5 });
 E.onFrame((t) => { cones.forEach((c, i) => { c.style.transform = `rotate(${Math.sin(t * 0.9 + i * 1.3) * 2.2}deg)`; c.style.opacity = 0.85 + 0.15 * Math.sin(t * 13 + i * 3) * (E.hash(Math.floor(t * 8) + i) > 0.92 ? 1 : 0); });
   win.style.filter = `brightness(${1 + E.ov.flash * 3})`; });
 lightning(T1C + 6.6, 0.6);
+E.glitch(TCLICK - 0.02, 0.2, 0.7); E.glitch(DUR - 0.35, 0.35, 0.9);
 E.frame();
 </script></body></html>

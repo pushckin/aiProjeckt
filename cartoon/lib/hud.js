@@ -3,6 +3,11 @@
   const H = (window.H = {});
   const el = (html, style) => { const d = E.el("div", { class: "abs" }, E.hud, html); Object.assign(d.style, style || {}); return d; };
   H.el = el;
+  // глитч текста: RGB-расслоение и ступенчатый сдвиг
+  H.glitchText = (node, t, dur = 0.4) => { E.sfx(t, "glitch", { dur: dur * 0.8 });
+    E.onFrame((tt, g) => { const u = (tt - t) / dur; if (u < 0 || u > 1) { if (node._gl === t) { node.style.textShadow = ""; node.style.translate = ""; node._gl = null; } return; }
+      node._gl = t; const a = Math.sin(u * Math.PI), fr = Math.floor(g * 30), d = (4 + 10 * E.hash(fr + 3)) * a;
+      node.style.textShadow = `${d}px 0 0 rgba(255,40,40,.85), ${-d}px 0 0 rgba(40,255,255,.85)`; node.style.translate = `${(E.hash(fr) - 0.5) * 40 * a}px 0`; }); };
 
   // глава: жёлтый тег + крупное название, раскрытие маской, уход маской вправо
   H.chapter = (t, num, title, dur = 3.4, pos = { left: "110px", bottom: "150px" }) => {
@@ -19,6 +24,7 @@
     gsap.set(d, { x: 0 }); E.tl.to(d, { x: 26, duration: dur, ease: "none" }, t);
     [line, ttl, tag].forEach((n, i) => E.tl.to(n, { clipPath: "inset(0% 0% 0% 100%)", duration: 0.45, ease: "power3.in" }, t + dur + i * 0.08));
     E.sfx(t, "whoosh", { dur: 0.5, gain: 0.12 }); E.sfx(t + 0.15, "hit", { gain: 0.18 });
+    H.glitchText(d, t, 0.45); H.glitchText(d, t + dur + 0.1, 0.4);
     return d;
   };
 

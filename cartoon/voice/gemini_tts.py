@@ -15,7 +15,7 @@ def tts(voice, prompt, out, tries=4):
         req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent",
                                      data=json.dumps(body).encode(), headers={"x-goog-api-key": key(), "Content-Type": "application/json"})
         try:
-            d = json.load(urllib.request.urlopen(req, timeout=120))
+            d = json.load(urllib.request.urlopen(req, timeout=420))
             part = d["candidates"][0]["content"]["parts"][0]["inlineData"]
             raw = base64.b64decode(part["data"]); mime = part.get("mimeType", "")
             print("mime:", mime, len(raw), file=sys.stderr)
@@ -27,6 +27,8 @@ def tts(voice, prompt, out, tries=4):
             msg = e.read()[:300].decode(errors="ignore"); print("HTTP", e.code, msg, file=sys.stderr)
             if e.code in (429, 500, 503): time.sleep(8 * (k + 1)); continue
             return False
+        except (TimeoutError, urllib.error.URLError, ConnectionError) as e:
+            print("net:", e, file=sys.stderr); time.sleep(5); continue
         except (KeyError, IndexError) as e:
             print("no audio:", json.dumps(d)[:300], file=sys.stderr); time.sleep(3)
     return False

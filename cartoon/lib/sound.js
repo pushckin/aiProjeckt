@@ -86,6 +86,7 @@
       doorOpen(t) { noise(t, 0.9, { type: "bandpass", f: 300, q: 1, gain: 0.2, a: 0.1 }); tone(t + 0.85, 0.3, { f: 90, f2: 50, gain: 0.3 }); this.beep(t, { f: 880, dur: 0.15 }); },
       sand(t, { dur = 3 } = {}) { noise(t, dur, { type: "bandpass", f: 1200, q: 0.5, gain: 0.08, a: 0.5 }); },
       metal(t, { gain = 0.3 } = {}) { [1250, 1980, 3120].forEach((f, i) => tone(t, 0.35, { f, type: "triangle", gain: gain / (i + 2) })); noise(t, 0.08, { type: "highpass", f: 2000, gain: gain * 0.5 }); },
+      glitch(t, { dur = 0.3 } = {}) { for (let i = 0; i < dur * 40; i++) { const st = t + R() * dur; tone(st, 0.02 + R() * 0.03, { f: 200 + R() * 3000, type: "square", gain: 0.05 + R() * 0.05, lp: 6000 }); } noise(t, dur, { type: "highpass", f: 3000, gain: 0.08 }); },
       scurry(t) { for (let i = 0; i < 8; i++) noise(t + i * 0.05, 0.03, { type: "bandpass", f: 3000, q: 3, gain: 0.06 }); },
     };
     for (const it of SFXL) { if (A[it.name]) A[it.name].call(A, it.t, it.p); }
