@@ -1,0 +1,224 @@
+<!doctype html><html><head><meta charset="utf-8"><title>p1 · Инструктаж</title>
+<link rel="stylesheet" href="../lib/style.css">
+<script src="../lib/gsap.min.js"></script><script src="../lib/voicedata.js"></script>
+<script src="../lib/engine.js"></script><script src="../lib/chars.js"></script><script src="../lib/sound.js"></script>
+<script src="../lib/hud.js"></script><script src="../lib/sets.js"></script></head>
+<body><div id="root"></div><script>
+// ЧАСТЬ 1 — ангар, инструктаж. Приёмы: №47 · Световая полоса выжигает кадры (молния-раскрытие),
+// №55 · Камера пробивает заголовок… (наезд на лицо на «хоть зву…»), №3 · жёсткие склейки в ритм (щелчок → фейерверк),
+// №28 · Карточки взрываются… частицы/взрыв (фейерверк), №180 · сплющивание/упругость (салют и падение Глуха).
+const V = (id) => E.vdur(id);
+const T1A = 1.5, T1B = T1A + V("s1a") + 0.45, T1C = T1B + V("s1b") + 0.4, T1D = T1C + V("s1c") + 0.35, TCLICK = T1D + V("s1d");
+const TFW = TCLICK + 0.3, T1E = TFW + 4.6, T1F = T1E + V("s1e") + 0.4, TSAL = T1F + V("s1f") + 0.2, DUR = TSAL + 3.9;
+const tl = E.init({ duration: DUR, partStart: 34.0 });
+E.ov.black = 1; E.ov.lb = 0.55; E.ov.vig = 0.75;
+
+// ── декорации ангара ──
+const back = E.layer("back", 0.6, { w: 2600, blur: 1.6 });
+back.style.left = "-340px";
+let w = `<rect width="2600" height="1080" fill="#22190F"/>`;
+for (let x = 0; x < 2600; x += 46) w += `<rect x="${x}" y="0" width="24" height="1080" fill="#2C2115"/>`;
+w += `<path d="M0,260 Q1300,-160 2600,260" stroke="#120C06" stroke-width="60" fill="none"/>`;
+for (let i = 0; i < 9; i++) { const x = 140 + i * 290; w += `<path d="M${x},0 V1080" stroke="#140D07" stroke-width="26"/>`; }
+w += `<g class="win">` + [700, 1900].map((x) => `<rect x="${x}" y="190" width="300" height="210" fill="#2E3A44" stroke="#120C06" stroke-width="16"/><path d="M${x + 150},190 v210 M${x},295 h300" stroke="#120C06" stroke-width="10"/>`).join("") + `</g>`;
+// доска брифинга с целью
+w += `<g transform="translate(700,470)"><rect width="520" height="330" fill="#5A3F25" stroke="#120C06" stroke-width="10"/><rect x="24" y="24" width="300" height="200" fill="#C9B48A" stroke="#120C06" stroke-width="5"/>
+ <path d="M44,190 l60,-70 l40,30 l70,-90 l80,130z" fill="#6B5A3A"/><rect x="150" y="120" width="70" height="40" fill="#3A2A1A"/>
+ <text x="174" y="260" text-anchor="middle" font-family="Russo One" font-size="30" fill="#F5F1E6">«ЧЁРНЫЙ КЛЫК»</text>
+ <rect x="350" y="30" width="150" height="110" fill="#E8DFC8" transform="rotate(4 425 85)"/><rect x="350" y="170" width="150" height="120" fill="#E8DFC8" transform="rotate(-3 425 230)"/>
+ <path d="M370,60 h100 M370,82 h80 M370,104 h110 M370,200 h100 M370,222 h90" stroke="#5A4A3A" stroke-width="6"/>
+ <circle class="ring" cx="186" cy="140" r="70" fill="none" stroke="#E2372C" stroke-width="9" stroke-dasharray="440" stroke-dashoffset="440"/></g>`;
+SET.svg(back, 2600, 1080, w);
+const ring = back.querySelector(".ring"), win = back.querySelector(".win");
+const fxBack = E.fxLayer("fxBack", 0.6);
+E.fx("fxBack", 0, "rain", { x: 360, y: 190, w: 300, h: 210, n: 50, color: "rgba(200,210,220,0.5)", speed: 1400, len: 30 });
+E.fx("fxBack", 0, "rain", { x: 1560, y: 190, w: 300, h: 210, n: 50, color: "rgba(200,210,220,0.5)", speed: 1400, len: 30, seed: 3 });
+// лампы и конусы света
+const lamps = E.layer("lamps", 0.8, { w: 2400 }); lamps.style.left = "-240px";
+SET.svg(lamps, 2400, 1080, [640, 1300, 1960].map((x) => SET.lamp(x, 180, 240)).join(""));
+const cones = [640, 1300, 1960].map((x, i) => { const d = E.el("div", { class: "abs" }, lamps); Object.assign(d.style, { left: x - 420 + "px", top: "220px", width: "840px", height: "860px",
+  background: "radial-gradient(ellipse 50% 100% at 50% 0%, rgba(255,214,140,0.38) 0%, rgba(255,190,100,0.12) 55%, transparent 75%)", clipPath: "polygon(44% 0,56% 0,100% 100%,0 100%)", mixBlendMode: "screen", transformOrigin: "50% 0" }); return d; });
+// пол
+const floor = E.layer("floor", 1, { w: 2600 }); floor.style.left = "-340px";
+SET.svg(floor, 2600, 1080, `<rect y="900" width="2600" height="180" fill="#2A2016"/><rect y="900" width="2600" height="12" fill="#3B2D1D"/>
+ ${[500, 1150, 1850].map((x) => `<ellipse cx="${x}" cy="990" rx="200" ry="22" fill="#3E3A33" opacity="0.7"/><ellipse cx="${x - 30}" cy="985" rx="120" ry="8" fill="#F2C77A" opacity="0.25"/>`).join("")}`);
+// реквизит среднего плана
+const props = E.layer("props", 1, { w: 2600 });
+SET.svg(props, 2600, 1080, SET.crate(2150, 640, 220, 200, "ФЕЙЕРВЕРК", "#7A5A33") + SET.crate(2200, 520, 160, 120, "", "#6A4C2B") + SET.crate(80, 700, 230, 220, "ТНТ", "#6A4C2B") + SET.crate(120, 560, 170, 140, "", "#7A5A33")
+ + `<g><rect x="1410" y="800" width="300" height="24" fill="#4A3622" stroke="#1B130B" stroke-width="6"/><rect x="1430" y="824" width="20" height="96" fill="#3A2A1A" stroke="#1B130B" stroke-width="5"/><rect x="1670" y="824" width="20" height="96" fill="#3A2A1A" stroke="#1B130B" stroke-width="5"/></g>
+ <g transform="translate(1550,800)" class="det"><rect x="-50" y="-58" width="100" height="58" rx="8" fill="#5A5440" stroke="#1B130B" stroke-width="6"/><g class="btn"><circle cx="0" cy="-58" r="20" fill="#E2372C" stroke="#1B130B" stroke-width="6"/></g><path d="M50,-20 q80,10 120,-40 q60,-70 220,-20" stroke="#1B130B" stroke-width="5" fill="none"/></g>
+ <g transform="translate(2010,690)"><rect x="-34" y="-48" width="68" height="96" rx="8" fill="#D9D2BE" stroke="#1B130B" stroke-width="6"/><circle cx="-12" cy="-12" r="7" fill="#1B130B"/><circle cx="12" cy="-12" r="7" fill="#1B130B"/><circle cx="-12" cy="18" r="7" fill="#1B130B"/><circle cx="12" cy="18" r="7" fill="#1B130B"/></g>
+ <rect x="2044" y="600" width="60" height="320" fill="#1F160D"/>`);
+const btn = props.querySelector(".btn"), fwCrate = props.querySelector("g");
+fwCrate.style.transformOrigin = "2260px 740px";
+// ящик Шмидта
+SET.svg(props, 2600, 1080, `<g transform="translate(530,860)"><rect width="230" height="70" fill="#56603A" stroke="#1B130B" stroke-width="6"/><rect x="0" y="0" width="230" height="16" fill="#3E462A"/><text x="115" y="54" text-anchor="middle" font-family="Russo One" font-size="26" fill="#E9B949">7.62</text><rect y="70" width="230" height="60" fill="#4B5332" stroke="#1B130B" stroke-width="6"/></g>`);
+// персонажи
+const shadowL = E.layer("shadowL", 0.85, { w: 2400 });
+const gra = C.make("graves", shadowL, { x: 950, y: 905, sc: 0.82, seed: 2 });
+gra.wrap.style.filter = "brightness(0.32) saturate(0.6)";
+gra.give("R", "sniper"); Object.assign(gra.st, { armRu: 14, armRl: 40, propR: 66, lid: 0.45 });
+const graEyes = E.glow(shadowL, 950, 905 - 300, 70, "rgba(255,226,150,0.9)", 0);
+const mid = E.layer("mid", 1, { w: 2600 });
+const sch = C.make("schmidt", mid, { x: 645, y: 990, sc: 1.0, seed: 1 });
+Object.assign(sch.st, { legL: -12, legR: 12, armLu: 18, armLl: 50, armRu: 18, armRl: 60, twitch: 0.5, smile: -0.2, brow: -0.2, turn: 0.35, px: 0.5 });
+const bub = C.make("bublik", mid, { x: 1180, y: 960, sc: 0.95, seed: 3 });
+bub.give("R", "grenade"); Object.assign(bub.st, { armRu: 40, armRl: 150, propR: 0, eyeWide: 0.6, smile: 0.4, turn: -0.2 });
+const luc = C.make("lucky", mid, { x: 1480, y: 965, sc: 0.95, seed: 4 });
+luc.give("L", "pin"); Object.assign(luc.st, { armLu: 70, armLl: 40, smile: 1, turn: -0.3, px: -0.3 });
+const glu = C.make("gluh", mid, { x: 1790, y: 965, sc: 0.95, seed: 5 });
+Object.assign(glu.st, { armRu: 78, armRl: 8, smile: 1, turn: 0.4, px: 1 });
+const fx = E.fxLayer("fx", 1);
+const near = E.layer("near", 1.35, { w: 3000, blur: 8 }); near.style.left = "-500px";
+SET.svg(near, 3000, 1080, `<path d="M0,1080 V860 h380 v220z" fill="#140D07"/><path d="M2500,1080 V800 h500 v280z" fill="#140D07"/>` +
+  [300, 1500, 2600].map((x) => `<path d="M${x},0 v${180 + (x % 7) * 20}" stroke="#0E0904" stroke-width="12" stroke-dasharray="18 10"/>`).join(""));
+// цветовая заливка фейерверка поверх сцены
+const wash = H.el("", { inset: 0, width: "1920px", height: "1080px", mixBlendMode: "screen", opacity: 0, zIndex: 0 });
+E.hud.insertBefore(wash, E.hud.firstChild);
+// крыса
+const rat = SET.svg(mid, 200, 120, `<g transform="translate(100,60)"><ellipse rx="46" ry="24" fill="#5C554C" stroke="#1B130B" stroke-width="5"/><circle cx="44" cy="-8" r="18" fill="#5C554C" stroke="#1B130B" stroke-width="5"/><circle cx="40" cy="-26" r="9" fill="#C98F84" stroke="#1B130B" stroke-width="4"/><circle cx="52" cy="-10" r="4" fill="#1B130B"/><path d="M-44,0 q-40,20 -60,-10" stroke="#C98F84" stroke-width="5" fill="none"/></g>`, { x: 2160, y: 690 });
+gsap.set(rat, { opacity: 0 });
+
+// ── свет: молния и раскрытие ──
+E.camSet({ cx: 960, cy: 560, s: 1.06 });
+const lightning = (t, k = 1) => { tl.to(E.ov, { flash: 0.55 * k, flashColor: "#DDE6F2", duration: 0.04 }, t); tl.to(E.ov, { flash: 0, duration: 0.12 }, t + 0.05);
+  tl.to(E.ov, { flash: 0.4 * k, duration: 0.04 }, t + 0.2); tl.to(E.ov, { flash: 0, duration: 0.5, ease: "power2.out" }, t + 0.25); E.sfx(t + 0.1, "thunder", { gain: 0.4 * k }); };
+gsap.set(E.ov, { flashColor: "#DDE6F2" });
+lightning(0.2, 1.2);
+tl.to(E.ov, { black: 0, duration: 1.0, ease: "power2.out" }, 0.45);
+tl.to(E.ov, { flashColor: "#FFF6DF", duration: 0.01 }, 1.4);
+H.chapter(1.0, 1, "ИНСТРУКТАЖ", 3.2, { left: "110px", top: "150px" });
+E.sfx(0, "rain", { dur: DUR, gain: 0.07 });
+E.music(1.3, T1D - 1.3, "stealth", { vol: 0.55 });
+
+// s1a — Шмидт, наезд
+E.camTo(0.3, { cx: 790, cy: 560, s: 1.28 }, T1A + 2.6, "power2.inOut");
+E.say(sch, "s1a", T1A);
+C.pose(sch, T1A + 0.1, { turn: 0.1, px: 0.1, brow: -0.4 }, 0.6, "power2.inOut");
+// «Объект — секретный бункер»: показывает на доску, на доске рисуется кольцо
+const TOBJ = T1A + 3.9;
+C.pose(sch, TOBJ - 0.2, { turn: -0.35, px: -0.8, armLu: 110, armLl: 10, head: -4 }, 0.5, "power3.out");
+E.camTo(T1A + 2.95, { cx: 820, cy: 530, s: 1.2, r: -0.8 }, 1.2, "power2.inOut");
+tl.to(ring, { attr: { "stroke-dashoffset": 0 }, duration: 0.8, ease: "power2.inOut" }, TOBJ + 0.2);
+E.sfx(TOBJ + 0.2, "whoosh", { dur: 0.6, gain: 0.07 });
+C.pose(sch, T1A + V("s1a") - 0.3, { armLu: 18, armLl: 50, turn: 0.25, px: 0.4, head: 0 }, 0.6, "power2.inOut");
+
+// s1b — за кадром; камера едет к троице, которая творит дичь
+E.camTo(T1B - 0.6, { cx: 1520, cy: 590, s: 1.15, r: 0.6 }, 1.3, "power3.inOut");
+E.say(sch, "s1b", T1B);
+E.sfx(T1B - 0.6, "whoosh", { dur: 1.0, gain: 0.08 });
+// Бублик лижет гранату
+for (let i = 0; i < 4; i++) { const t = T1B - 0.3 + i * 1.1; C.pose(bub, t, { head: -10, mouthOpen: 0.75, lid: 0.3 }, 0.3, "power2.out"); C.pose(bub, t + 0.45, { head: 4, mouthOpen: 0.15, lid: 0 }, 0.4, "power2.inOut"); E.sfx(t + 0.1, "chew", { dur: 0.25 }); }
+// Лаки крутит чеку на пальце
+const spin = { a: 0 }; tl.to(spin, { a: 360 * 14, duration: DUR - 1, ease: "none" }, 0.5);
+E.onFrame(() => { if (luc.props.L) luc.st.propL = spin.a; });
+// Глух суёт палец в розетку — искры
+[0.5, 2.1, 3.3].forEach((d) => { E.fx("fx", T1B + d, "sparks", { x: 2010, y: 700, n: 14, a: Math.PI, spread: 2 }); E.sfx(T1B + d, "zap", { dur: 0.25 }); C.pose(glu, T1B + d, { eyeWide: 1, sqy: 1.06 }, 0.1, "power2.out"); C.pose(glu, T1B + d + 0.2, { eyeWide: 0, sqy: 1 }, 0.4); });
+
+// s1c — обратно к Шмидту
+E.camTo(T1C - 0.5, { cx: 860, cy: 560, s: 1.18, r: 0 }, 1.1, "power3.inOut");
+E.say(sch, "s1c", T1C);
+C.pose(sch, T1C, { turn: 0.15, px: 0.1, brow: -0.6 }, 0.4, "power2.inOut");
+// «Грейвс прикрывает с крыши»: глаза в тени загораются, кивок
+const TGR = T1C + 3.2;
+C.pose(sch, TGR - 0.1, { armRu: 92, armRl: 6, turn: 0.45, px: 0.9 }, 0.45, "power3.out");
+E.camTo(TGR - 0.1, { cx: 1000, cy: 540, s: 1.22, r: 0.4 }, 1.0, "power2.inOut");
+tl.to(graEyes, { opacity: 1, duration: 0.3 }, TGR + 0.2); tl.to(graEyes, { opacity: 0.25, duration: 0.8 }, TGR + 1.6);
+C.pose(gra, TGR + 0.3, { head: 8 }, 0.25, "power2.out"); C.pose(gra, TGR + 0.6, { head: 0 }, 0.4, "power2.inOut");
+E.sfx(TGR + 0.25, "metal", { gain: 0.06 });
+// «Вы трое — след в след»: отъезд на всех
+const TTRI = T1C + 4.97;
+C.pose(sch, TTRI - 0.1, { armRu: 70, armRl: 20, propR: 0 }, 0.4, "power3.out");
+E.camTo(TTRI - 0.15, { cx: 1200, cy: 560, s: 0.98, r: 0 }, 1.2, "power3.inOut");
+[bub, luc, glu].forEach((c, i) => C.pose(c, TTRI + 0.2 + i * 0.18, { turn: -0.6, px: -0.9 }, 0.35));
+C.pose(sch, T1D - 0.4, { armRu: 18, armRl: 60 }, 0.4, "power2.inOut");
+
+// s1d — «если кто-то… хоть зву…» — медленный наезд на лицо
+E.camTo(T1D - 0.2, { cx: 655, cy: 520, s: 1.95, r: -1.5 }, V("s1d") + 0.15, "power2.inOut");
+E.say(sch, "s1d", T1D);
+C.pose(sch, T1D, { lean: 6, turn: 0, px: 0, brow: -1, twitch: 1.2, smile: -0.5 }, 0.8, "power2.inOut");
+E.music(T1D - 0.1, V("s1d") + 0.05, "tension", { vol: 0.6 });
+E.sfx(T1D, "riser", { dur: V("s1d"), gain: 0.08 });
+// Глух за кадром перебирается к столу (камера на лице Шмидта)
+tl.set(glu.st, { x: 1730, y: 965, armRu: 10, armRl: 14, armLu: 127, armLl: 91, turn: -0.3, px: -0.8, py: 0.6, smile: 1 }, T1D + 1.7);
+tl.set(luc.st, { x: 2230 }, T1D + 1.7);
+
+// ЩЁЛК — жёсткая склейка на детонатор
+tl.set(E.cam, { cx: 1600, cy: 730, s: 2.25, r: 2 }, TCLICK);
+E.camTo(TCLICK + 0.02, { cx: 1590, cy: 740, s: 2.35, r: 2.5 }, 0.26, "power2.out");
+tl.to(btn, { y: 8, duration: 0.05, ease: "power2.in" }, TCLICK + 0.05); tl.to(btn, { y: 0, duration: 0.2, ease: "back.out(2)" }, TCLICK + 0.2);
+C.pose(glu, TCLICK, { armLl: 97 }, 0.08, "power2.in"); C.pose(glu, TCLICK + 0.2, { armLl: 91 }, 0.2, "power2.out");
+E.sfx(TCLICK + 0.05, "click", { gain: 0.9 }); E.shake(TCLICK + 0.05, 4, 0.15);
+
+// фейерверк
+tl.set(E.cam, { cx: 1460, cy: 560, s: 0.98, r: 0 }, TFW);
+E.camTo(TFW + 0.02, { cx: 1500, cy: 540, s: 1.04, r: -0.6 }, 4.3, "power1.out");
+E.fx("fx", TFW + 0.05, "fireworks", { x: 2120, y: 650, n: 12, seed: 5 });
+E.fx("fx", TFW + 0.05, "explosion", { x: 2260, y: 760, size: 0.55, seed: 2 });
+tl.to(fwCrate, { opacity: 0, duration: 0.08 }, TFW + 0.08);
+E.shake(TFW + 0.05, 14, 0.6); E.sfx(TFW + 0.05, "boom", { size: 0.6 }); E.sfx(TFW + 0.2, "fireworks", { dur: 4 });
+// крыса летит через кадр
+gsap.set(rat, { x: 0, y: 0, rotation: 0 });
+tl.to(rat, { opacity: 1, duration: 0.05 }, TFW + 0.3);
+tl.to(rat, { x: -1500, duration: 1.3, ease: "power1.out" }, TFW + 0.3);
+tl.to(rat, { y: -420, duration: 0.6, ease: "power2.out" }, TFW + 0.3); tl.to(rat, { y: 180, duration: 0.7, ease: "power2.in" }, TFW + 0.9);
+tl.to(rat, { rotation: -720, duration: 1.3, ease: "power1.out" }, TFW + 0.3); tl.to(rat, { opacity: 0, duration: 0.1 }, TFW + 1.55);
+E.sfx(TFW + 0.4, "scurry"); E.sfx(TFW + 1.5, "thud", { gain: 0.15 });
+// цветные вспышки
+const cols = ["#FF5A3C", "#FFD65A", "#78E678", "#5AAAFF", "#F078FF"];
+E.onFrame((t) => { const u = t - TFW; if (u < 0 || u > 4.4) { wash.style.opacity = 0; return; }
+  const k = Math.floor(u * 6); wash.style.background = cols[k % cols.length]; wash.style.opacity = (0.28 * (1 - u / 4.4)) * (0.5 + 0.5 * Math.abs(Math.sin(u * 19))); });
+[sch, bub, luc, glu].forEach((c, i) => C.pose(c, TFW + 0.1 + i * 0.05, { eyeWide: 1, brow: 1, mouthOpen: c === bub || c === luc ? 0.8 : 0.3, sqy: 1.05 }, 0.25, "power3.out"));
+C.hop(luc, TFW + 0.8, 60); C.hop(bub, TFW + 1.1, 40); C.hop(luc, TFW + 1.7, 50);
+C.pose(gra, TFW + 0.2, { head: -6 }, 0.3);
+// после: дым, всё стихло
+[bub, luc, glu].forEach((c) => C.pose(c, TFW + 3.6, { eyeWide: 0, brow: 0, mouthOpen: 0, sqy: 1 }, 0.6, "power2.inOut"));
+
+// двухшот: Шмидт встал, Глух перед ним, дым в лицо
+const T2S = TFW + 4.4;
+tl.set(sch.st, { y: 960, legL: 0, legR: 0, lean: 0, armLu: 10, armLl: 14, armRu: 22, armRl: 30, eyeWide: 0, brow: -0.7, mouthOpen: 0, turn: 0.5, px: 0.9, twitch: 1.4 }, T2S);
+tl.set(glu.st, { x: 1000, y: 965, sc: 1.0, armRu: 10, armRl: 14, armLu: 10, armLl: 14, turn: -0.5, px: -0.9, py: 0, smile: 1, eyeWide: 0 }, T2S);
+E.at(T2S, () => glu.give("R", "rifle"));
+tl.set([luc.st, bub.st], { op: 0 }, T2S);
+tl.set(E.cam, { cx: 830, cy: 540, s: 1.45, r: 0 }, T2S);
+E.camTo(T2S + 0.02, { cx: 815, cy: 530, s: 1.55, r: -0.5 }, (T1F - 0.35) - (T2S + 0.02) - 0.03, "sine.inOut");
+E.sfx(T2S, "hit", { gain: 0.1 });
+FX_exhale = { life: 2.2, draw(ctx, u, p) { for (let i = 0; i < 10; i++) { const k = E.clamp((u - i * 0.06) / 1.4); if (k <= 0) continue;
+  const x = E.lerp(p.x, p.x2, E.easeOut(k)) + Math.sin(i * 2 + u * 3) * 14, y = E.lerp(p.y, p.y2, E.easeOut(k)) - k * 30, r = 18 + k * 70;
+  E.puff(ctx, x, y, r, "rgba(232,222,200,0.7)", "rgba(232,222,200,0)", (1 - k) * 0.9); } } };
+E.FXTYPES.exhale = FX_exhale;
+E.fx("fx", T2S + 0.25, "exhale", { x: 700, y: 640, x2: 990, y2: 600 });
+E.sfx(T2S + 0.25, "whoosh", { dur: 1.1, gain: 0.06 });
+C.pose(glu, T2S + 0.7, { lid: 0.7, smile: 0.6 }, 0.4); C.pose(glu, T2S + 1.5, { lid: 0, smile: 1 }, 0.3);
+E.say(sch, "s1e", T1E);
+C.pose(sch, T1E + 1.2, { lean: 4, brow: -1 }, 0.5, "power2.inOut");
+// s1f — Глух
+E.camTo(T1F - 0.35, { cx: 930, cy: 520, s: 1.6, r: 0.5 }, 0.8, "power3.inOut");
+C.pose(glu, T1F - 0.3, { armLu: 150, armLl: 150, head: 7 }, 0.45, "power3.out");
+E.say(glu, "s1f", T1F);
+// кривой салют прикладом по лбу и падение
+C.pose(glu, TSAL, { armLu: 10, armLl: 15, head: 0 }, 0.3, "power2.inOut");
+C.pose(glu, TSAL + 0.15, { armRu: 60, armRl: 160, propR: -95 }, 0.22, "power3.in");
+E.sfx(TSAL + 0.37, "bonk"); E.shake(TSAL + 0.37, 6, 0.2);
+C.pose(glu, TSAL + 0.37, { eyeWide: 1, lid: 0, px: 0, py: -1, brow: 1 }, 0.1, "power2.out");
+tl.to(glu.st, { rot: 84, duration: 0.6, ease: "power3.in" }, TSAL + 0.75);
+tl.to(glu.st, { y: 1000, duration: 0.6, ease: "power3.in" }, TSAL + 0.75);
+E.sfx(TSAL + 1.35, "thud", { gain: 0.7 }); E.shake(TSAL + 1.35, 9, 0.3);
+tl.to(glu.st, { rot: 88, duration: 0.4, ease: "elastic.out(1,0.4)" }, TSAL + 1.35);
+E.camTo(TSAL + 0.3, { cx: 960, cy: 660, s: 1.15, r: 0 }, 1.4, "power2.inOut");
+// Шмидт: рука-лицо
+C.pose(sch, TSAL + 1.6, { armLu: 40, armLl: 160, head: 6, lid: 0.8, twitch: 0 }, 0.6, "power2.inOut");
+E.sfx(TSAL + 2.2, "whoosh", { dur: 0.4, gain: 0.04 });
+// вжух-шов в следующую главу
+E.camTo(DUR - 0.75, { cx: 1900, cy: 560, s: 1.3, r: 3 }, 0.75, "power3.in");
+tl.to("#layers", { filter: "blur(14px)", duration: 0.6, ease: "power2.in" }, DUR - 0.65);
+gsap.set("#layers", { filter: "blur(0px)" });
+E.sfx(DUR - 0.75, "whoosh", { dur: 0.9, gain: 0.25 });
+E.music(TSAL + 1.4, DUR - TSAL - 1.4, "stealth", { vol: 0.5 });
+
+// жизнь света: качание ламп, окна вспыхивают с молнией
+E.onFrame((t) => { cones.forEach((c, i) => { c.style.transform = `rotate(${Math.sin(t * 0.9 + i * 1.3) * 2.2}deg)`; c.style.opacity = 0.85 + 0.15 * Math.sin(t * 13 + i * 3) * (E.hash(Math.floor(t * 8) + i) > 0.92 ? 1 : 0); });
+  win.style.filter = `brightness(${1 + E.ov.flash * 3})`; });
+lightning(T1C + 6.6, 0.6);
+E.frame();
+</script></body></html>

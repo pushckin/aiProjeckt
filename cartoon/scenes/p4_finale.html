@@ -1,0 +1,170 @@
+<!doctype html><html><head><meta charset="utf-8"><title>p4 · Финал и эвакуация</title>
+<link rel="stylesheet" href="../lib/style.css">
+<script src="../lib/gsap.min.js"></script><script src="../lib/voicedata.js"></script>
+<script src="../lib/engine.js"></script><script src="../lib/chars.js"></script><script src="../lib/sound.js"></script>
+<script src="../lib/hud.js"></script><script src="../lib/sets.js"></script></head>
+<body><div id="root"></div><script>
+// ЧАСТЬ 4 — серверная и эвакуация. Приёмы: №12 · Форма настроек… печатаются, наезд на текст (загрузка на терминале),
+// №9 · Счётчик… до 80+ (проценты), №96 · ЭЛТ-монитор включается (экран терминала), №131 · Фонтан данных… гаснет до чёрного (ядерный гриб),
+// №106 · Россыпь звёзд… мерцающая цифра (таймер 0:03 → 0:01).
+const V = (id) => E.vdur(id);
+const TIN = 2.0, TLOAD = 2.5, TDONE = 5.2, T4A = 6.0, T4B = T4A + V("s4a") + 0.35, TOUT = T4B + V("s4b") + 0.4;
+const T4C = TOUT + 2.9, T4D = T4C + V("s4c") + 0.7, T4E = T4D + V("s4d") + 0.3, TDROPB = T4E + V("s4e") + 0.15, TT3 = TDROPB + 0.6;
+const T4F = TT3 + 1.0, TLIE = T4F + V("s4f") - 0.6, TBOOM = T4F + V("s4f") + 0.9, DUR = TBOOM + 7.5;
+const tl = E.init({ duration: DUR, partStart: 144 });
+E.ov.flash = 1; E.ov.flashColor = "#FAF7EE"; E.ov.lb = 0.55; E.ov.vig = 0.8;
+
+// ══ серверная ══
+const sBack = E.layer("sBack", 0.8, { w: 2600, blur: 1.5 }); sBack.style.left = "-340px";
+let sv = `<rect width="2600" height="1080" fill="#0E0C0A"/>`;
+for (let i = 0; i < 9; i++) { const x = 60 + i * 290; sv += `<rect x="${x}" y="160" width="220" height="720" fill="#1C1A17" stroke="#050403" stroke-width="8"/>`;
+  for (let r = 0; r < 14; r++) sv += `<rect x="${x + 16}" y="${180 + r * 48}" width="188" height="36" fill="#262420"/>`; }
+SET.svg(sBack, 2600, 1080, sv);
+const leds = E.fxLayer("leds", 0.8);
+E.FXTYPES.leds = { life: 999, draw(ctx, u) { for (let i = 0; i < 9; i++) for (let r = 0; r < 14; r++) for (let k = 0; k < 5; k++) { const x = -340 + 60 + i * 290 + 30 + k * 34, y = 198 + r * 48, h = E.hash(i * 97 + r * 13 + k);
+  const on = Math.sin(u * (2 + h * 9) + h * 40) > 0.2; ctx.fillStyle = on ? (h > 0.7 ? "#FFB347" : "#7CFF6A") : "#203018"; ctx.fillRect(x, y, 10, 6); } } };
+E.fx("leds", 0, "leds");
+const sMid = E.layer("sMid", 1, { w: 2600 }); sMid.style.left = "-340px";
+SET.svg(sMid, 2600, 1080, `<rect y="900" width="2600" height="180" fill="#151310"/><rect x="1000" y="560" width="620" height="340" fill="#2A2824" stroke="#050403" stroke-width="8"/>
+ <rect x="1060" y="300" width="500" height="300" rx="16" fill="#1B1A16" stroke="#050403" stroke-width="10"/><rect x="1270" y="600" width="80" height="40" fill="#1B1A16"/>
+ <rect x="1500" y="700" width="60" height="26" rx="4" fill="#0A0907" stroke="#E9B949" stroke-width="3"/>`);
+const screen = H.el(`<div class="tag" style="font-size:44px;color:#7CFF6A">ЗАГРУЗКА: <span class="pc">0</span>%</div>
+ <div style="width:380px;height:34px;border:5px solid #7CFF6A;margin-top:18px;padding:4px"><div class="bar" style="height:100%;width:0%;background:#7CFF6A"></div></div>
+ <div class="tag done" style="font-size:40px;color:#E9B949;margin-top:20px;opacity:0">ФАЙЛ СКОПИРОВАН</div>`, { left: "0", top: "0", width: "440px" });
+sMid.appendChild(screen); Object.assign(screen.style, { left: 1340 + 1100 - 1000 + "px", top: "340px" });
+screen.style.left = "1105px"; screen.style.top = "340px";
+const sChars = E.layer("sChars", 1, { w: 2600 });
+const sch = C.make("schmidt", sChars, { x: 690, y: 990, sc: 1.1, seed: 1 });
+sch.give("R", "flash"); Object.assign(sch.st, { soot: 0.8, armRu: 30, armRl: 70, propR: -90, turn: 0.5, px: 1, twitch: 1.5, smile: -0.4, eyeWide: 0.3, blush: 0 });
+const sGlow = E.glow(sMid, 1310, 450, 520, "rgba(124,255,106,0.35)", 0.8);
+
+// ══ вертолётная площадка на рассвете ══
+const ext = [];
+const xl = (name, p, o) => { const d = E.layer(name, p, o); d.style.opacity = 0; ext.push(d); return d; };
+const sky = xl("sky", 0); sky.style.cssText += "width:1920px;height:1080px;background:linear-gradient(180deg,#C77A35 0%,#EDB665 35%,#F8E1AE 58%,#E7A050 75%,#5A3518 100%)";
+const sun = xl("sun", 0.05, { w: 2600 }); SET.sun(sun, 1300, 640, 600, "rgba(255,246,220,0.95)"); SET.sun(sun, 1300, 640, 1200, "rgba(255,210,140,0.5)");
+const farX = xl("farX", 0.2, { w: 4400, blur: 3 }); farX.style.left = "-1200px";
+let fx2 = SET.hills(4400, 800, 70, 3.7, "#B37C45") + SET.hills(4400, 850, 50, 6.2, "#8C5C33");
+[400, 1300, 2300, 3300].forEach((x) => fx2 += SET.pylon(x, 840, 300, "#6E4826", 5)); SET.svg(farX, 4400, 1080, fx2);
+const bunk = xl("bunk", 0.9, { w: 4000 }); bunk.style.left = "-1200px";
+SET.svg(bunk, 4000, 1080, `<path d="M600,920 Q900,420 1700,400 Q2300,420 2500,920z" fill="#5A3E24" stroke="#1B130B" stroke-width="8"/><rect x="1300" y="640" width="300" height="280" fill="#1B140D" stroke="#1B130B" stroke-width="8"/>
+ <path d="M1300,640 l60,-40 l40,50 l70,-30 l60,40 l-20,30z" fill="#2A1C10"/>`);
+const extG = xl("extG", 1, { w: 6000 }); extG.style.left = "-2000px";
+SET.svg(extG, 6000, 1080, `<rect y="920" width="6000" height="1800" fill="#3A2614"/>` + SET.hills(6000, 930, 14, 1.1, "#4A3119", { step: 70, h: 1600 }) +
+  `<ellipse cx="3500" cy="975" rx="300" ry="40" fill="#2A1C10"/><text x="3500" y="992" text-anchor="middle" font-family="Russo One" font-size="70" fill="#E9B949" opacity="0.7" transform="scale(1,0.4) translate(0,1480)">H</text>`);
+const extM = xl("extM", 1, { w: 4000 });
+const heli = SET.svg(extM, 900, 400, `<g transform="translate(450,200) scale(1.25)">${SET.heli("#3B3A2A")}</g>`, { x: 1050, y: -700 });
+const gra = C.make("graves", bunk, { x: 2050, y: 560, sc: 0.55, seed: 2 }); gra.give("R", "sniper"); Object.assign(gra.st, { armRu: 14, armRl: 40, propR: 66, lid: 0.45, op: 0 });
+const sch2 = C.make("schmidt", extM, { x: 960, y: 990, sc: 1.0, seed: 1 });
+sch2.give("R", "flash"); Object.assign(sch2.st, { soot: 0.8, armRu: 20, armRl: 40, propR: -90, turn: 0.6, px: 1, twitch: 1, op: 0 });
+const bub = C.make("bublik", extM, { x: 1380, y: 990, sc: 0.95, outfit: "undies", seed: 3 }); Object.assign(bub.st, { soot: 0.5, smile: 0.7, turn: -0.4, px: -0.6, op: 0 });
+const luc = C.make("lucky", extM, { x: 1600, y: 990, sc: 0.95, seed: 4 }); Object.assign(luc.st, { soot: 0.5, smile: 1, turn: -0.4, px: -0.6, op: 0 });
+const glu = C.make("gluh", extM, { x: -200, y: 990, sc: 1.0, seed: 5 });
+glu.give("R", "battery"); Object.assign(glu.st, { armRu: 40, armRl: 115, propR: 0, armLu: 40, armLl: 115, smile: 1, op: 0 });
+const extFx = E.fxLayer("extFx", 1); extFx.el.style.opacity = 0; ext.push(extFx.el);
+const nukeL = E.fxLayer("nukeL", 0.9);
+const battery = SET.svg(extM, 200, 220, `<g transform="translate(100,190)">${(() => { const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); C.PROPS.battery(g); return g.innerHTML; })()}</g>`, { x: 0, y: 0 });
+battery.style.opacity = 0; const bTimer = battery.querySelector(".timer"), bBlink = battery.querySelector(".blink");
+
+// ── серверная ──
+tl.to(E.ov, { flash: 0, duration: 0.7, ease: "power2.out" }, 0);
+E.camSet({ cx: 940, cy: 560, s: 1.25, r: 0 });
+E.camTo(0.05, { cx: 990, cy: 540, s: 1.15 }, TIN - 0.2, "sine.inOut");
+H.chapter(0.6, 4, "ФИНАЛ", 1.6, { left: "110px", top: "150px" });
+E.sfx(0, "hum", { dur: TOUT + 0.1 });
+E.music(0.3, TDONE - 0.3, "tension", { vol: 0.5 });
+// трясущиеся руки
+E.onFrame((t) => { if (t < TOUT) sch.st.lean = Math.sin(t * 31) * 1.2 * (t < T4A ? 1 : 0.4); });
+C.pose(sch, TIN - 0.5, { armRu: 75, armRl: 30, propR: 0 }, 0.5, "power2.inOut");
+E.sfx(TIN, "click", { gain: 0.4 }); E.sfx(TIN + 0.1, "beep", { f: 880, dur: 0.15 });
+// вставка: экран крупно
+tl.set(E.cam, { cx: 1290, cy: 440, s: 2.1, r: 0 }, TLOAD - 0.15);
+E.camTo(TLOAD - 0.13, { cx: 1300, cy: 440, s: 2.3 }, TDONE - TLOAD + 0.3, "sine.inOut");
+const pc = screen.querySelector(".pc"), bar = screen.querySelector(".bar"), done = screen.querySelector(".done"), prog = { p: 0 };
+tl.to(prog, { p: 100, duration: TDONE - TLOAD - 0.4, ease: "power1.inOut" }, TLOAD);
+E.onFrame(() => { pc.textContent = Math.round(prog.p); bar.style.width = prog.p + "%"; });
+for (let i = 0; i < 10; i++) E.sfx(TLOAD + i * (TDONE - TLOAD - 0.4) / 10, "tick", { gain: 0.1 });
+gsap.set(done, { y: 20 }); tl.to(done, { opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.6)" }, TDONE - 0.3);
+E.sfx(TDONE - 0.3, "beep", { f: 1760, dur: 0.3, gain: 0.1 }); E.sfx(TDONE - 0.3, "hit", { gain: 0.12 });
+// истерический смех и рация
+tl.set(E.cam, { cx: 780, cy: 520, s: 1.6, r: 0 }, TDONE + 0.25);
+C.pose(sch, TDONE + 0.3, { armRu: 140, armRl: 40, propR: -90, eyeWide: 1, smile: 0.6, mouthOpen: 0.4 }, 0.35, "back.out(2)");
+for (let i = 0; i < 4; i++) { C.pose(sch, TDONE + 0.4 + i * 0.16, { sqy: 1.05, head: 4 }, 0.08); C.pose(sch, TDONE + 0.48 + i * 0.16, { sqy: 0.97, head: -4 }, 0.08); }
+E.camTo(TDONE + 0.27, { cx: 760, cy: 500, s: 1.75, r: -1 }, T4B - TDONE - 0.7, "sine.inOut");
+E.say(sch, "s4a", T4A);
+C.pose(sch, T4A + 0.2, { mouthOpen: 0, sqy: 1, head: 0 }, 0.3);
+E.say(sch, "s4b", T4B); H.radio(T4B, "s4b", "ШМИДТ");
+C.pose(sch, T4B - 0.3, { armLu: 160, armLl: 160, smile: 0.2, eyeWide: 0.5 }, 0.4);
+E.music(T4A + 1.3, TOUT - T4A - 1.1, "triumph", { vol: 0.6 });
+E.camTo(T4B - 0.1, { cx: 820, cy: 520, s: 1.45, r: 0 }, TOUT - T4B - 0.2, "sine.inOut");
+
+// ── склейка на улицу ──
+tl.set([sBack, sMid, sChars, leds.el], { opacity: 0 }, TOUT);
+tl.set(ext, { opacity: 1 }, TOUT);
+tl.set([sch2.st, bub.st, luc.st, gra.st, glu.st], { op: 1 }, TOUT);
+tl.set(E.cam, { cx: 1250, cy: 470, s: 0.82, r: 0 }, TOUT);
+tl.set(E.ov, { vig: 0.55 }, TOUT);
+E.camTo(TOUT + 0.02, { cx: 1150, cy: 560, s: 0.92, r: 0 }, T4C - TOUT - 0.6, "sine.inOut");
+gsap.set(heli, { y: 0 });
+tl.to(heli, { y: 1360, duration: 3.0, ease: "power2.out" }, TOUT);
+E.onFrame((t) => { heli.querySelectorAll(".rotor").forEach((r) => r.setAttribute("transform", `scale(${Math.cos(t * 41)},1)`)); });
+E.sfx(TOUT, "heli", { dur: DUR - TOUT - 7, gain: 0.35 });
+E.fx("extFx", TOUT + 2.0, "motes", { n: 90, w: 3000, x: 300, y: 500, h: 520, color: "200,150,100", a: 0.55, size: 6, fall: -10, wind: 160 });
+E.FXTYPES.dust = { life: 999, draw(ctx, u, p) { for (let i = 0; i < 14; i++) { const ph = (u * 0.5 + i / 14) % 1, a = i % 2 ? 1 : -1;
+  E.puff(ctx, p.x + a * ph * 900, p.y - ph * 90, 60 + ph * 140, "rgba(180,130,80,0.5)", "rgba(180,130,80,0)", Math.min(1, ph * 4) * (1 - ph)); } } };
+E.fx("extFx", TOUT + 1.6, "dust", { x: 1500, y: 960 });
+// Глух выбегает с батареей
+C.walk(glu, T4C - 0.9, 700, 2.2, { stride: 110, ease: "power1.out" });
+E.sfx(T4C - 0.9, "steps", { n: 7, dt: 0.3, gain: 0.12 });
+E.camTo(T4C - 0.55, { cx: 900, cy: 560, s: 1.1, r: 0 }, 1.6, "power2.inOut");
+E.say(glu, "s4c", T4C);
+// Шмидт медленно поворачивается, глаза-блюдца
+C.pose(sch2, T4D - 0.6, { turn: -0.6, px: -1, eyeWide: 1.4, brow: 1, smile: -0.5 }, 1.2, "power1.inOut");
+tl.set(E.cam, { cx: 900, cy: 520, s: 1.5, r: 0 }, T4D - 0.65);
+E.camTo(T4D - 0.63, { cx: 900, cy: 500, s: 1.7, r: 1 }, V("s4d") + 0.6, "sine.inOut");
+E.say(sch2, "s4d", T4D);
+C.pose(sch2, T4D + 0.3, { armLu: 70, armLl: 40, armRu: 50, armRl: 30 }, 0.6, "power2.inOut");
+E.music(T4D - 0.5, V("s4d") + 0.6, "tension", { vol: 0.45 });
+// «А? Что? Не слышу!» — роняет
+C.pose(glu, T4E - 0.2, { armLu: 150, armLl: 150, head: 8, turn: 0.4 }, 0.3);
+E.say(glu, "s4e", T4E);
+const bpos = () => { const s = glu.st; return [s.x + 60, s.y - 330]; };
+E.at(TDROPB, () => glu.give("R", null));
+tl.set(battery, { opacity: 1, x: 760 - 100 + 60, y: 990 - 330 - 190 }, TDROPB);
+tl.to(battery, { y: 990 - 220, duration: 0.35, ease: "power2.in" }, TDROPB);
+tl.to(battery, { rotation: 8, duration: 0.35 }, TDROPB);
+C.pose(glu, TDROPB, { armRu: 20, armRl: 30, armLu: 20, armLl: 30 }, 0.3);
+E.sfx(TDROPB + 0.35, "metal", { gain: 0.5 }); E.sfx(TDROPB + 0.35, "thud", { gain: 0.6 }); E.shake(TDROPB + 0.35, 8, 0.25);
+// таймер
+tl.set(E.cam, { cx: 820, cy: 860, s: 2.4, r: -2 }, TT3 - 0.05);
+E.camTo(TT3 - 0.03, { cx: 820, cy: 850, s: 2.6, r: -2 }, 0.7, "sine.inOut");
+const timerTxt = (t) => t < TT3 ? "" : t < TT3 + 1.6 ? "0:03" : t < TT3 + 3.1 ? "0:02" : t < TBOOM - 0.4 ? "0:01" : "0:00";
+E.onFrame((t) => { bTimer.textContent = timerTxt(t); });
+[TT3, TT3 + 1.6, TT3 + 3.1].forEach((t, i) => { E.sfx(t, "beep", { f: 1400 - i * 100, dur: 0.18, gain: 0.14 }); });
+H.big(TT3, 0.75, "0:03", { size: 260, y: 220 });
+// Грейвс с крыши
+tl.set(E.cam, { cx: 1000, cy: 560, s: 1.0, r: 0 }, T4F - 0.25);
+E.camTo(T4F - 0.23, { cx: 1050, cy: 540, s: 1.08 }, TLIE - T4F - 0.15, "sine.inOut");
+E.say(null, "s4f", T4F); H.radio(T4F, "s4f", "ГРЕЙВС");
+H.big(TT3 + 1.6, 0.7, "0:02", { size: 200, y: 220 });
+H.big(TT3 + 3.1, 0.7, "0:01", { size: 200, y: 220 });
+// все падают лицом вниз, Шмидт плачет
+[sch2, bub, luc, glu].forEach((c, i) => { tl.to(c.st, { rot: i % 2 ? 84 : -84, duration: 0.4, ease: "power3.in" }, TLIE + i * 0.12); E.sfx(TLIE + 0.4 + i * 0.12, "thud", { gain: 0.35 }); });
+tl.set(E.cam, { cx: 980, cy: 900, s: 1.9, r: 0 }, TLIE + 0.7);
+E.camTo(TLIE + 0.72, { cx: 960, cy: 905, s: 2.05 }, TBOOM - TLIE - 0.75, "sine.inOut");
+C.pose(sch2, TLIE + 0.7, { armLu: 150, armLl: 150, armRu: 150, armRl: 150, tear: 1, lid: 1, mouthOpen: 0.5, smile: -1 }, 0.3);
+for (let i = 0; i < 4; i++) { C.pose(sch2, TLIE + 1.0 + i * 0.3, { sqy: 1.05 }, 0.12); C.pose(sch2, TLIE + 1.15 + i * 0.3, { sqy: 0.96 }, 0.12); }
+E.sfx(TT3, "tick", { gain: 0.2 }); for (let t = TT3 + 0.5; t < TBOOM - 0.3; t += 0.5) E.sfx(t, "tick", { gain: 0.15 });
+// ── БАБАХ ──
+tl.set(E.ov, { flash: 1, flashColor: "#FFFDF4" }, TBOOM);
+tl.set(E.cam, { cx: 980, cy: 330, s: 0.47, r: 0 }, TBOOM);
+tl.to(E.ov, { flash: 0.15, duration: 1.4, ease: "power2.out" }, TBOOM + 0.1);
+E.fx("nukeL", TBOOM, "nuke", { x: 900, y: 950, size: 1.45 });
+E.sfx(TBOOM, "nuke"); E.shake(TBOOM + 0.2, 34, 3.2, 9);
+E.camTo(TBOOM + 0.05, { cx: 960, cy: 250, s: 0.42, r: 0 }, DUR - TBOOM - 0.1, "sine.out");
+tl.to(E.ov, { flash: 1, duration: 1.4, ease: "power2.in" }, DUR - 1.45);
+tl.set([heli], { opacity: 0 }, TBOOM + 0.2);
+[sch2, bub, luc, glu, gra].forEach((c) => tl.set(c.st, { op: 0 }, TBOOM + 0.4));
+tl.set(battery, { opacity: 0 }, TBOOM);
+E.frame();
+</script></body></html>

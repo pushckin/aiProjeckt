@@ -1,0 +1,10 @@
+voice/models/
+voice/raw/
+voice/test/
+render/*.log
+render/.step-*
+render/p?.mp4
+render/joined.mp4
+render/voice.wav
+render/list.txt
+test/
