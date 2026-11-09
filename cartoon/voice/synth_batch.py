@@ -8,9 +8,9 @@ import gemini_tts
 from gemini_tts import tts, key
 from synth_gemini import CAST, TAG, FX
 
-MODELS = ["gemini-3.1-flash-tts-preview", "gemini-2.5-flash-preview-tts", "gemini-3.8-flash-lite-tts"]
+MODELS = os.environ.get("TTS_MODELS", "gemini-3.1-flash-tts-preview,gemini-2.5-flash-preview-tts,gemini-3.8-flash-lite-tts").split(",")
 GROUPS = {"narr": ["n1a", "n1b", "n1c", "n2a", "n2b", "r1", "r2", "r3", "r4", "r5"],
-          "schmidtA": ["s1a", "s1b", "s1c", "s1d", "s1e", "s2b"], "schmidtB": ["s2e", "s3c", "s4a", "s4b", "s4d"],
+          "schmidtA": ["s1a", "s1b", "s1c", "s1d", "s1e", "s2b"], "schmidtA1": ["s1a", "s1b", "s1c"], "s1c": ["s1c"], "schmidtA2": ["s1d", "s1e", "s2b"], "schmidtB": ["s2e", "s3c", "s4a", "s4b", "s4d"],
           "graves": ["s2a", "s2d", "s3b", "s4f", "s5b"], "lucky": ["s2f", "s3e", "s5a"], "gluh": ["s1f", "s4c", "s4e"],
           "bublik": ["s2c"], "boss": ["s3d"], "merc": ["s3a"]}
 lines = {l["id"]: l for l in json.load(open(os.path.join(HERE, "lines.json"), encoding="utf-8"))["lines"]}
@@ -18,7 +18,7 @@ lines = {l["id"]: l for l in json.load(open(os.path.join(HERE, "lines.json"), en
 def transcribe(f):
     body = {"contents": [{"parts": [{"inlineData": {"mimeType": "audio/wav", "data": base64.b64encode(open(f, "rb").read()).decode()}},
              {"text": "Расшифруй дословно речь в аудио, каждую фразу-реплику с новой строки. Только текст."}]}]}
-    req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
+    req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
                                  data=json.dumps(body).encode(), headers={"x-goog-api-key": key(), "Content-Type": "application/json"})
     try: return json.load(urllib.request.urlopen(req, timeout=300))["candidates"][0]["content"]["parts"][0]["text"].strip()
     except Exception as e: return f"<err {e}>"

@@ -8,8 +8,8 @@
 // №158 · Пиксельная граната взрывает заголовок… (гранаты Лаки → взрыв ворот), №46 · вжух (Лаки на скейте),
 // №131 · Фонтан данных… вспышка (сирена и красный свет), №107 · пролёт сквозь объект (наёмник закрывает объектив → шов).
 const V = (id) => E.vdur(id);
-const T2A = 3.7, TSC = T2A + 1.25, T2B = T2A + V("s2a") + 0.4, TSNEAK = T2B + 1.2, T2C = T2B + V("s2b") + 0.25, TWHACK = T2C + 1.45;
-const T2D = T2C + V("s2c") + 0.55, T2E = T2D + V("s2d") + 0.4, T2F = T2E + V("s2e") + 0.35, TDROP = T2F + 2.2, TBOOM = TDROP + 1.0, TMERC = TBOOM + 3.2, DUR = TMERC + 3.4;
+const T2A = 3.7, TSC = T2A + 1.25, T2B = T2A + V("s2a") + 0.4, TSNEAK = T2B + 1.2, T2C = T2B + V("s2b") + 0.25, TWHACK = T2C + Math.min(2.4, V("s2c") * 0.5);
+const T2D = T2C + V("s2c") + 0.55, T2E = T2D + V("s2d") + 0.4, T2F = T2E + V("s2e") + 0.35, TDROP = T2F + V("s2f") - 1.2, TBOOM = TDROP + 1.0, TMERC = TBOOM + 3.2, DUR = TMERC + 3.4;
 const tl = E.init({ duration: DUR, partStart: 71 });
 E.ov.lb = 0.55; E.ov.vig = 0.7;
 
@@ -127,7 +127,7 @@ E.camTo(T2C - 0.1, { cx: 760, cy: 600, s: 1.12, r: 1 }, 0.5, "power3.out");
 E.shake(T2C, 8, 0.3); E.sfx(T2C - 0.05, "whoosh", { dur: 0.4, gain: 0.2 }); E.sfx(T2C, "fire", { dur: 4 });
 C.pose(sch, T2C + 0.05, { eyeWide: 1, brow: 1, sqy: 1.05, bob: 20 }, 0.2, "power3.out");
 C.pose(sentry, T2C + 0.3, { eyeWide: 1, brow: 1, px: -1 }, 0.25, "power3.out");
-C.walk(bub, T2C + 0.9, 640, 0.5, { stride: 60, ease: "power2.in" });
+C.walk(bub, T2C + 1.5, 640, 0.5, { stride: 60, ease: "power2.in" });
 // удар факелом
 C.pose(bub, TWHACK - 0.25, { armRu: 150, armRl: 20 }, 0.2, "power2.out");
 C.pose(bub, TWHACK, { armRu: 60, armRl: 10 }, 0.12, "power3.in");

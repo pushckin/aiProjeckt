@@ -313,7 +313,7 @@
     tl.to(ch.st, { walkAmp: 1, duration: 0.25, ease: "power1.out" }, t);
     tl.to(ch.st, { x: toX, ...(toY != null ? { y: toY } : {}), duration: dur, ease }, t);
     tl.to(ch.st, { walk: `+=${Math.max(1, Math.round(dist / stride))}`, duration: dur, ease }, t);
-    tl.to(ch.st, { walkAmp: 0, duration: 0.3, ease: "power1.in" }, t + dur - 0.3);
+    tl.to(ch.st, { walkAmp: 0, duration: Math.min(0.3, Math.max(0.05, dur - 0.26)), ease: "power1.in" }, t + Math.max(0.26, dur - 0.3));
   };
   // поза: набор свойств с пружиной
   C.pose = (ch, t, props, dur = 0.45, ease = "back.out(1.6)") => E.tl.to(ch.st, { ...props, duration: dur, ease }, t);
